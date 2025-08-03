@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  overflow: hidden; /* Evita que aparezcan barras de scroll */
+  background-color: #f0f0f0; /* Un color de fondo suave */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: sans-serif;
+}
+
+#gameCanvas {
+  background-color: #ffffff;
+  border: 2px solid #000000;
+}
+
+/* Estilos para posibles textos o botones que quieras añadir después */
+h1 {
+  position: absolute;
+  top: 20px;
+  color: #333;
+}
