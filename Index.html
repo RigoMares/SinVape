@@ -3,274 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SinVape - Tu Aliado para Dejar de Vapear</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Calm Health Palette -->
-    <!-- Application Structure Plan: A single-page application emulating a mobile app experience with Firebase integration. An auth wall now precedes the main app. Navigation is handled by a fixed bottom bar that switches between seven main sections. -->
-    <!-- Visualization & Content Choices: Progress is shown with large text counters. The Streak section provides daily engagement. The Community section allows for anonymous peer support. The Support section offers direct links to professional help. Health risks and myths are presented in interactive cards. Gamification is handled via unlockable badges. Coping mechanisms include a guided breathing animation and a distraction minigame. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-    <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #F7FAFC; }
-        h1, h2, h3 { font-family: 'Nunito', sans-serif; }
-        .nav-active { color: #4FD1C5; }
-        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
-        .breathing-circle { transition: transform 4s ease-in-out; }
-        #gameCanvas { cursor: pointer; background-color: #f7fafc; border-radius: 0.5rem; }
-    </style>
+    <title>SinVape App</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-50 text-gray-800">
+<body>
 
-    <div id="app" class="max-w-lg mx-auto bg-white min-h-screen shadow-lg flex flex-col">
-        <!-- Auth Section -->
-        <section id="auth-section" class="flex flex-col items-center justify-center h-screen p-6">
-            <h1 class="text-4xl font-bold text-teal-500 mb-2">SinVape</h1>
-            <p class="text-gray-600 mb-8">Tu viaje hacia una vida libre de vapeo empieza aquí.</p>
-            <div id="auth-forms" class="w-full max-w-sm space-y-4">
-                <div id="login-form">
-                    <input type="email" id="login-email" placeholder="Correo electrónico" class="w-full p-3 border border-gray-300 rounded-md">
-                    <input type="password" id="login-password" placeholder="Contraseña" class="w-full p-3 border border-gray-300 rounded-md mt-2">
-                    <button id="login-btn" class="w-full mt-4 bg-teal-500 text-white font-bold py-3 rounded-lg hover:bg-teal-600">Iniciar Sesión</button>
-                </div>
-                <div id="register-form" class="hidden">
-                    <input type="email" id="register-email" placeholder="Correo electrónico" class="w-full p-3 border border-gray-300 rounded-md">
-                    <input type="password" id="register-password" placeholder="Contraseña" class="w-full p-3 border border-gray-300 rounded-md mt-2">
-                    <button id="register-btn" class="w-full mt-4 bg-blue-500 text-white font-bold py-3 rounded-lg hover:bg-blue-600">Crear Cuenta</button>
-                </div>
-                <p id="auth-error" class="text-red-500 text-sm text-center"></p>
-                <div class="text-center">
-                    <button id="toggle-auth-btn" class="text-sm text-teal-600 hover:underline">¿No tienes cuenta? Regístrate</button>
-                    <p class="text-gray-400 my-2">o</p>
-                    <button id="anonymous-login-btn" class="text-sm text-gray-600 hover:underline">Ingresar como anónimo</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Main App Container (hidden by default) -->
-        <div id="app-container" class="hidden">
-            <header class="p-4 border-b bg-white sticky top-0 z-10 flex justify-between items-center">
-                <div class="w-8"></div>
-                <h1 class="text-2xl font-bold text-center text-teal-500">SinVape</h1>
-                <button id="logout-button" class="text-2xl text-gray-400 hover:text-red-500" title="Cerrar Sesión">⏻</button>
-            </header>
-
-            <main class="flex-grow p-4 md:p-6 mb-16">
-                <!-- All app sections go here -->
-                <section id="inicio" class="space-y-6">
-                    <div class="text-center p-6 bg-teal-50 rounded-xl">
-                        <h2 class="text-xl font-bold text-teal-700">¡Sigue así!</h2>
-                        <p class="text-gray-600">Cada minuto sin vapear es una victoria para tu salud.</p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="text-3xl font-extrabold text-teal-600" id="dias-sin-vapear">--</p>
-                            <p class="text-sm text-gray-500">Días Totales</p>
-                        </div>
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="text-3xl font-extrabold text-teal-600" id="dinero-ahorrado">$ --</p>
-                            <p class="text-sm text-gray-500">Dinero Ahorrado</p>
-                        </div>
-                    </div>
-                    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
-                        <h3 class="font-bold text-amber-800">Tip del Día</h3>
-                        <p id="tip-text" class="text-amber-700 text-sm">Cargando tip...</p>
-                    </div>
-                    <button id="sos-button" class="w-full bg-red-500 text-white font-bold py-4 rounded-lg shadow-lg hover:bg-red-600 transition-colors flex items-center justify-center text-lg">
-                        <span class="text-2xl mr-2">🆘</span> Botón S.O.S.
-                    </button>
-                </section>
-
-                <section id="racha" class="hidden space-y-6 text-center">
-                    <h2 class="text-2xl font-bold">Mi Racha Actual</h2>
-                    <div class="mx-auto bg-teal-500 text-white w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-lg">
-                        <span id="streak-days" class="text-5xl font-extrabold">0</span>
-                        <span class="font-bold">días</span>
-                    </div>
-                    <div id="streak-message" class="p-4 rounded-lg min-h-[90px]"></div>
-                    <div id="streak-buttons" class="space-y-3">
-                        <p class="font-bold text-gray-700">¿Cómo te fue hoy?</p>
-                        <button id="streak-success-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors">✅ No vapeé hoy</button>
-                        <button id="streak-fail-btn" class="w-full bg-yellow-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-yellow-600 transition-colors">⚠️ Tuve una recaída</button>
-                    </div>
-                </section>
-
-                <section id="comunidad" class="hidden space-y-6">
-                    <div class="text-center">
-                        <h2 class="text-2xl font-bold">Comunidad de Apoyo</h2>
-                        <p class="text-gray-600 mt-1">Comparte tu experiencia y lee las de otros. No estás solo.</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border">
-                        <h3 class="font-bold text-lg text-teal-700 mb-2">Comparte tu historia</h3>
-                        <textarea id="post-input" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" rows="3" placeholder="Hoy fue un día difícil, pero lo logré..."></textarea>
-                        <button id="submit-post-btn" class="mt-2 w-full bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">Publicar</button>
-                    </div>
-                    <div id="posts-container" class="space-y-4"></div>
-                </section>
-
-                <section id="conoce" class="hidden space-y-6"></section>
-                <section id="avance" class="hidden space-y-6"></section>
-                <section id="apoyo" class="hidden space-y-6"></section>
-                <section id="herramientas" class="hidden space-y-6"></section>
-            </main>
-
-            <nav class="fixed bottom-0 left-0 right-0 bg-white border-t max-w-lg mx-auto shadow-inner">
-                <div class="flex justify-around">
-                    <button data-target="inicio" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100 nav-active"><span class="text-2xl">🏠</span><span class="text-xs block">Inicio</span></button>
-                    <button data-target="racha" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">🔥</span><span class="text-xs block">Racha</span></button>
-                    <button data-target="comunidad" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">👥</span><span class="text-xs block">Comunidad</span></button>
-                    <button data-target="avance" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">📊</span><span class="text-xs block">Avance</span></button>
-                    <button data-target="apoyo" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">❤️</span><span class="text-xs block">Apoyo</span></button>
-                    <button data-target="herramientas" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">🛠️</span><span class="text-xs block">Herramientas</span></button>
-                </div>
-            </nav>
+    <div id="auth-container">
+        <h2>Bienvenido a SinVape</h2>
+        <p>Crea una cuenta o inicia sesión para guardar tu progreso.</p>
+        <input type="email" id="email" placeholder="Correo electrónico" required>
+        <input type="password" id="password" placeholder="Contraseña" required>
+        <div id="auth-buttons">
+            <button id="register-btn">Registrarse</button>
+            <button id="login-btn">Iniciar Sesión</button>
         </div>
+        <p id="error-message" class="error"></p>
     </div>
 
-    <!-- Onboarding Modal -->
-    <div id="onboarding-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden"></div>
+    <div id="game-container" class="hidden">
+        <h1>Juego SinVape</h1>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <button id="logout-btn">Cerrar Sesión</button>
+    </div>
 
-    <script type="module">
-        // Firebase Imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
-        // --- Firebase Configuration ---
+    <script>
+        // ESTA ES LA CONFIGURACIÓN CORRECTA QUE ME PROPORCIONASTE
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyB_xukFwu5YTlcyYAPKDQI5P-8jZ5DLJxA",
+            authDomain: "sinvape-app-rigomares.firebaseapp.com",
+            projectId: "sinvape-app-rigomares",
+            storageBucket: "sinvape-app-rigomares.appspot.com",
+            messagingSenderId: "803922018785",
+            appId: "1:803922018785:web:8e7e9228cc44d8ce5ad2a0",
+            measurementId: "G-WFBW62R557"
         };
-        
-        // --- Initialize Firebase ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
 
-        let currentUser = null;
-        let userDataUnsubscribe = null;
-        let postsUnsubscribe = null;
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </p>
 
-        // --- Auth UI Elements ---
-        const authSection = document.getElementById('auth-section');
-        const appContainer = document.getElementById('app-container');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const toggleAuthBtn = document.getElementById('toggle-auth-btn');
-        const loginBtn = document.getElementById('login-btn');
-        const registerBtn = document.getElementById('register-btn');
-        const anonymousLoginBtn = document.getElementById('anonymous-login-btn');
-        const logoutButton = document.getElementById('logout-button');
-        const authError = document.getElementById('auth-error');
+    <script src="script.js" defer></script>
 
-        // --- App UI Elements ---
-        // ... (Get all other app elements like in previous versions)
-
-        // --- Auth Logic ---
-        toggleAuthBtn.addEventListener('click', () => {
-            loginForm.classList.toggle('hidden');
-            registerForm.classList.toggle('hidden');
-            toggleAuthBtn.textContent = loginForm.classList.contains('hidden') 
-                ? '¿Ya tienes cuenta? Inicia Sesión' 
-                : '¿No tienes cuenta? Regístrate';
-        });
-
-        registerBtn.addEventListener('click', () => {
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            createUserWithEmailAndPassword(auth, email, password)
-                .catch(error => { authError.textContent = error.message; });
-        });
-
-        loginBtn.addEventListener('click', () => {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            signInWithEmailAndPassword(auth, email, password)
-                .catch(error => { authError.textContent = error.message; });
-        });
-
-        anonymousLoginBtn.addEventListener('click', () => {
-            signInAnonymously(auth).catch(error => { authError.textContent = error.message; });
-        });
-
-        logoutButton.addEventListener('click', () => {
-            signOut(auth);
-        });
-
-        // --- Main Auth State Listener ---
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                currentUser = user;
-                authSection.classList.add('hidden');
-                appContainer.classList.remove('hidden');
-                setupFirestoreListeners();
-                // ... (Initialize app state for logged-in user)
-            } else {
-                currentUser = null;
-                authSection.classList.remove('hidden');
-                appContainer.classList.add('hidden');
-                if (userDataUnsubscribe) userDataUnsubscribe();
-                if (postsUnsubscribe) postsUnsubscribe();
-            }
-        });
-
-        // --- Firestore Logic ---
-        function setupFirestoreListeners() {
-            // Unsubscribe from previous listeners if they exist
-            if (userDataUnsubscribe) userDataUnsubscribe();
-            if (postsUnsubscribe) postsUnsubscribe();
-
-            // Listener for user-specific data
-            const userDocRef = doc(db, "users", currentUser.uid);
-            userDataUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    // Update UI with user data
-                    // updateCounters(userData);
-                    // updateStreakView(userData);
-                    // updateAchievements(userData);
-                    // updateProgressChart(userData);
-                } else {
-                    // Show onboarding if no data exists for this user
-                    // showOnboardingModal();
-                }
-            });
-
-            // Listener for public community posts
-            const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-            postsUnsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
-                const posts = [];
-                querySnapshot.forEach((doc) => {
-                    posts.push({ id: doc.id, ...doc.data() });
-                });
-                // renderPosts(posts);
-            });
-        }
-
-        // Example function to save user data
-        async function saveUserData(data) {
-            const userDocRef = doc(db, "users", currentUser.uid);
-            await setDoc(userDocRef, data, { merge: true });
-        }
-
-        // Example function to add a post
-        async function addPost(text) {
-            await addDoc(collection(db, "posts"), {
-                text: text,
-                author: currentUser.isAnonymous ? "Usuario Anónimo" : currentUser.email.split('@')[0],
-                userId: currentUser.uid,
-                timestamp: serverTimestamp()
-            });
-        }
-
-        // --- Initialize App ---
-        // The onAuthStateChanged listener now handles the main app initialization flow.
-    </script>
 </body>
 </html>
