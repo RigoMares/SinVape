@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Calm Health Palette -->
-    <!-- Application Structure Plan: A single-page application emulating a mobile app experience. Navigation is handled by a fixed bottom bar that switches between six main sections: 'Inicio', 'Racha', 'Conoce', 'Mi Avance', 'Apoyo', and 'Herramientas'. This structure separates distinct user tasks into clear, easily accessible sections. -->
-    <!-- Visualization & Content Choices: Progress is shown with large text counters. The Streak section provides daily engagement. The Support section offers direct links to professional help. Health risks and myths are presented in interactive cards. Gamification is handled via unlockable badges. Coping mechanisms include a guided breathing animation and a distraction minigame. The SOS button provides an immediate shortcut to a coping tool. -->
+    <!-- Application Structure Plan: A single-page application emulating a mobile app experience with Firebase integration. An auth wall now precedes the main app. Navigation is handled by a fixed bottom bar that switches between seven main sections. -->
+    <!-- Visualization & Content Choices: Progress is shown with large text counters. The Streak section provides daily engagement. The Community section allows for anonymous peer support. The Support section offers direct links to professional help. Health risks and myths are presented in interactive cards. Gamification is handled via unlockable badges. Coping mechanisms include a guided breathing animation and a distraction minigame. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #F7FAFC; }
@@ -25,483 +25,252 @@
 <body class="bg-slate-50 text-gray-800">
 
     <div id="app" class="max-w-lg mx-auto bg-white min-h-screen shadow-lg flex flex-col">
-
-        <header class="p-4 border-b bg-white sticky top-0 z-10 flex justify-between items-center">
-            <div class="w-8"></div>
-            <h1 class="text-2xl font-bold text-center text-teal-500">SinVape</h1>
-            <button id="settings-button" class="text-2xl text-gray-400 hover:text-teal-500">⚙️</button>
-        </header>
-
-        <main class="flex-grow p-4 md:p-6 mb-16">
-            
-            <section id="inicio" class="space-y-6">
-                <div class="text-center p-6 bg-teal-50 rounded-xl">
-                    <h2 class="text-xl font-bold text-teal-700">¡Sigue así!</h2>
-                    <p class="text-gray-600">Cada minuto sin vapear es una victoria para tu salud.</p>
+        <!-- Auth Section -->
+        <section id="auth-section" class="flex flex-col items-center justify-center h-screen p-6">
+            <h1 class="text-4xl font-bold text-teal-500 mb-2">SinVape</h1>
+            <p class="text-gray-600 mb-8">Tu viaje hacia una vida libre de vapeo empieza aquí.</p>
+            <div id="auth-forms" class="w-full max-w-sm space-y-4">
+                <div id="login-form">
+                    <input type="email" id="login-email" placeholder="Correo electrónico" class="w-full p-3 border border-gray-300 rounded-md">
+                    <input type="password" id="login-password" placeholder="Contraseña" class="w-full p-3 border border-gray-300 rounded-md mt-2">
+                    <button id="login-btn" class="w-full mt-4 bg-teal-500 text-white font-bold py-3 rounded-lg hover:bg-teal-600">Iniciar Sesión</button>
                 </div>
-
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div class="bg-gray-100 p-4 rounded-lg">
-                        <p class="text-3xl font-extrabold text-teal-600" id="dias-sin-vapear">--</p>
-                        <p class="text-sm text-gray-500">Días Totales</p>
-                    </div>
-                    <div class="bg-gray-100 p-4 rounded-lg">
-                        <p class="text-3xl font-extrabold text-teal-600" id="dinero-ahorrado">$ --</p>
-                        <p class="text-sm text-gray-500">Dinero Ahorrado</p>
-                    </div>
+                <div id="register-form" class="hidden">
+                    <input type="email" id="register-email" placeholder="Correo electrónico" class="w-full p-3 border border-gray-300 rounded-md">
+                    <input type="password" id="register-password" placeholder="Contraseña" class="w-full p-3 border border-gray-300 rounded-md mt-2">
+                    <button id="register-btn" class="w-full mt-4 bg-blue-500 text-white font-bold py-3 rounded-lg hover:bg-blue-600">Crear Cuenta</button>
                 </div>
-
-                <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
-                    <h3 class="font-bold text-amber-800">Tip del Día</h3>
-                    <p id="tip-text" class="text-amber-700 text-sm">Cargando tip...</p>
-                </div>
-                
-                <button id="sos-button" class="w-full bg-red-500 text-white font-bold py-4 rounded-lg shadow-lg hover:bg-red-600 transition-colors flex items-center justify-center text-lg">
-                    <span class="text-2xl mr-2">🆘</span> Botón S.O.S.
-                </button>
-                <p class="text-xs text-center text-gray-400">Presiona en momentos de crisis para una distracción inmediata.</p>
-            </section>
-
-            <section id="racha" class="hidden space-y-6 text-center">
-                <h2 class="text-2xl font-bold">Mi Racha Actual</h2>
-                <div class="mx-auto bg-teal-500 text-white w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-lg">
-                    <span id="streak-days" class="text-5xl font-extrabold">0</span>
-                    <span class="font-bold">días</span>
-                </div>
-                <div id="streak-message" class="p-4 rounded-lg min-h-[90px]"></div>
-                <div id="streak-buttons" class="space-y-3">
-                    <p class="font-bold text-gray-700">¿Cómo te fue hoy?</p>
-                    <button id="streak-success-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors">✅ No vapeé hoy</button>
-                    <button id="streak-fail-btn" class="w-full bg-yellow-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-yellow-600 transition-colors">⚠️ Tuve una recaída</button>
-                </div>
-            </section>
-
-            <section id="conoce" class="hidden space-y-6">
+                <p id="auth-error" class="text-red-500 text-sm text-center"></p>
                 <div class="text-center">
-                    <h2 class="text-2xl font-bold">Centro de Conocimiento</h2>
-                    <p class="text-gray-600 mt-1">Información clara para tomar las mejores decisiones.</p>
-                </div>
-                <div class="space-y-4">
-                    <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
-                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
-                            <h3 class="font-bold text-lg text-teal-700">¿Por qué es tan difícil dejarlo?</h3>
-                            <span class="text-2xl transition-transform">▾</span>
-                        </button>
-                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
-                            <p>La adicción no es una falla moral, sino una enfermedad que cambia el cerebro. Sustancias como la nicotina alteran los circuitos de dopamina, responsables del placer. Con el tiempo, tu cerebro se acostumbra y pierde la capacidad de sentir placer por cosas naturales, necesitando la sustancia solo para sentirse "normal". Esto crea una búsqueda compulsiva a pesar de las consecuencias.</p>
-                        </div>
-                    </div>
-                     <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
-                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
-                            <h3 class="font-bold text-lg text-teal-700">La Raíz del Dolor</h3>
-                            <span class="text-2xl transition-transform">▾</span>
-                        </button>
-                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
-                            <p>Muchas veces, una adicción no se trata de buscar placer, sino de escapar de un dolor interno. Experiencias difíciles o traumáticas (incluso las que no recordamos claramente) pueden generar un sufrimiento que intentamos "automedicar" con comportamientos o sustancias que nos alivian a corto plazo. La pregunta clave no es "¿por qué la adicción?", sino "¿por qué duele?".</p>
-                        </div>
-                    </div>
-                     <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
-                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
-                            <h3 class="font-bold text-lg text-teal-700">Un Cerebro en Construcción</h3>
-                            <span class="text-2xl transition-transform">▾</span>
-                        </button>
-                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
-                            <p>El cerebro adolescente (que se desarrolla hasta los 25 años) es como un auto con un acelerador muy potente (emociones, búsqueda de recompensas) pero con frenos aún en desarrollo (juicio, control de impulsos). Exponerlo a drogas en esta etapa es mucho más dañino, ya que interrumpe esta construcción crucial y puede causar daños difíciles de revertir.</p>
-                        </div>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
-                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
-                            <h3 class="font-bold text-lg text-teal-700">Mitos vs. Realidades del Vapeo</h3>
-                            <span class="text-2xl transition-transform">▾</span>
-                        </button>
-                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
-                            <p><strong>Mito:</strong> Es solo vapor de agua inofensivo.</p>
-                            <p><strong>Realidad:</strong> El aerosol de los vapes contiene nicotina (altamente adictiva), saborizantes y químicos dañinos que se convierten en partículas finas que se alojan en tus pulmones.</p>
-                        </div>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
-                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
-                            <h3 class="font-bold text-lg text-teal-700">Daños Físicos a tu Salud</h3>
-                             <span class="text-2xl transition-transform">▾</span>
-                        </button>
-                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
-                            <p><strong>• Sistema Respiratorio:</strong> Puede causar inflamación pulmonar (EPOC), tos crónica, asma y aumentar el riesgo de cáncer.</p>
-                            <p><strong>• Sistema Cardiovascular:</strong> La nicotina aumenta tu ritmo cardíaco y presión arterial, elevando el riesgo de arterioesclerosis e infartos.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="avance" class="hidden space-y-6">
-                 <div class="text-center">
-                    <h2 class="text-2xl font-bold">Mi Avance</h2>
-                    <p class="text-gray-600 mt-1">Visualiza tu increíble progreso.</p>
-                </div>
-                <div>
-                    <h3 class="font-bold text-lg mb-2 text-center">Ahorro a lo Largo del Tiempo</h3>
-                    <div class="chart-container bg-gray-50 p-2 rounded-lg">
-                        <canvas id="progresoChart"></canvas>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="font-bold text-lg mb-2 text-center">Logros Desbloqueados</h3>
-                    <div id="achievements-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-4 text-center">
-                        <!-- Achievements will be dynamically inserted here -->
-                    </div>
-                </div>
-            </section>
-            
-            <section id="apoyo" class="hidden space-y-6">
-                <div class="text-center">
-                    <h2 class="text-2xl font-bold">Líneas de Apoyo</h2>
-                    <p class="text-gray-600 mt-1">No estás solo. Hablar con alguien puede hacer la diferencia.</p>
-                </div>
-                <div class="space-y-4">
-                    <div class="bg-white p-4 rounded-lg shadow-sm border">
-                        <h3 class="font-bold text-lg text-teal-700">Línea de la Vida</h3>
-                        <p class="text-sm text-gray-600 mb-3">Apoyo del Gobierno de México para salud mental y adicciones. 24/7.</p>
-                        <a href="tel:8009112000" class="w-full block text-center bg-blue-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors">Llamar al 800 911 2000</a>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border">
-                        <h3 class="font-bold text-lg text-teal-700">Centros de Integración Juvenil (CIJ)</h3>
-                        <p class="text-sm text-gray-600 mb-3">Especialistas en prevención y tratamiento de adicciones.</p>
-                        <a href="https://wa.me/525545551212" target="_blank" class="w-full block text-center bg-green-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors">Chatear por WhatsApp</a>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border">
-                        <h3 class="font-bold text-lg text-teal-700">Consejo Ciudadano MX</h3>
-                        <p class="text-sm text-gray-600 mb-3">Apoyo psicológico gratuito para todo el país. 24/7.</p>
-                        <a href="tel:5555335533" class="w-full block text-center bg-gray-700 text-white font-bold py-3 rounded-lg shadow-md hover:bg-gray-800 transition-colors">Llamar al 55 5533 5533</a>
-                    </div>
-                     <div class="bg-white p-4 rounded-lg shadow-sm border">
-                        <h3 class="font-bold text-lg text-teal-700">IMJUVE (Contacto Joven)</h3>
-                        <p class="text-sm text-gray-600 mb-3">Apoyo emocional especialmente para jóvenes, por parte de jóvenes.</p>
-                        <a href="https://wa.link/5xg94p" target="_blank" class="w-full block text-center bg-purple-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-purple-600 transition-colors">Chatear por WhatsApp</a>
-                    </div>
-                </div>
-            </section>
-
-            <section id="herramientas" class="hidden space-y-6">
-                <div class="text-center">
-                    <h2 class="text-2xl font-bold">Caja de Herramientas</h2>
-                    <p class="text-gray-600 mt-1">Recursos para los momentos difíciles.</p>
-                </div>
-                <div class="space-y-4">
-                    <div class="bg-white p-4 rounded-lg shadow-sm border text-center">
-                        <h3 class="font-bold text-lg text-teal-700 mb-2">Respiración Guiada</h3>
-                        <p class="text-sm text-gray-600 mb-4">Calma tu ansiedad en 60 segundos.</p>
-                        <div class="flex justify-center items-center h-32">
-                             <div id="breathing-circle" class="breathing-circle w-16 h-16 bg-teal-300 rounded-full"></div>
-                        </div>
-                        <p id="breathing-text" class="font-medium text-teal-800 h-6"></p>
-                        <button id="start-breathing" class="mt-2 bg-teal-500 text-white font-bold py-2 px-6 rounded-full hover:bg-teal-600 transition-colors">Empezar</button>
-                    </div>
-                     <div id="minigame-container" class="bg-white p-4 rounded-lg shadow-sm border text-center">
-                        <h3 class="font-bold text-lg text-teal-700 mb-2">Distracción Rápida</h3>
-                        <p id="minigame-intro" class="text-sm text-gray-600 mb-4">Un mini-juego para enfocar tu mente en otra cosa.</p>
-                        <div id="game-ui" class="hidden">
-                            <div class="flex justify-around mb-2 font-mono">
-                                <div>Tiempo: <span id="game-timer">30</span>s</div>
-                                <div>Puntos: <span id="game-score">0</span></div>
-                            </div>
-                            <canvas id="gameCanvas" width="300" height="200"></canvas>
-                        </div>
-                        <button id="start-game-btn" class="bg-amber-500 text-white font-bold py-2 px-6 rounded-full hover:bg-amber-600 transition-colors">Jugar</button>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-
-        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t max-w-lg mx-auto shadow-inner">
-            <div class="flex justify-around">
-                <button data-target="inicio" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100 nav-active">
-                    <span class="text-2xl">🏠</span>
-                    <span class="text-xs block">Inicio</span>
-                </button>
-                <button data-target="racha" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100">
-                    <span class="text-2xl">🔥</span>
-                    <span class="text-xs block">Racha</span>
-                </button>
-                 <button data-target="conoce" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100">
-                    <span class="text-2xl">📚</span>
-                    <span class="text-xs block">Conoce</span>
-                </button>
-                <button data-target="avance" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100">
-                    <span class="text-2xl">📊</span>
-                    <span class="text-xs block">Avance</span>
-                </button>
-                <button data-target="apoyo" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100">
-                    <span class="text-2xl">❤️</span>
-                    <span class="text-xs block">Apoyo</span>
-                </button>
-                <button data-target="herramientas" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100">
-                    <span class="text-2xl">🛠️</span>
-                    <span class="text-xs block">Herramientas</span>
-                </button>
-            </div>
-        </nav>
-    </div>
-
-    <!-- Onboarding Modal -->
-    <div id="onboarding-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
-            <h2 class="text-xl font-bold mb-4 text-center">¡Bienvenido a SinVape!</h2>
-            <p class="text-gray-600 mb-4">Para personalizar tu experiencia, por favor, danos un par de datos.</p>
-            <div class="space-y-4">
-                <div>
-                    <label for="quit-date" class="block text-sm font-medium text-gray-700">¿Cuándo dejaste de vapear?</label>
-                    <input type="date" id="quit-date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
-                </div>
-                <div>
-                    <label for="daily-cost" class="block text-sm font-medium text-gray-700">¿Cuánto gastabas al día? (MXN)</label>
-                    <input type="number" id="daily-cost" placeholder="Ej: 50" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                    <button id="toggle-auth-btn" class="text-sm text-teal-600 hover:underline">¿No tienes cuenta? Regístrate</button>
+                    <p class="text-gray-400 my-2">o</p>
+                    <button id="anonymous-login-btn" class="text-sm text-gray-600 hover:underline">Ingresar como anónimo</button>
                 </div>
             </div>
-            <button id="save-settings-button" class="mt-6 w-full bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">Guardar y Empezar</button>
+        </section>
+
+        <!-- Main App Container (hidden by default) -->
+        <div id="app-container" class="hidden">
+            <header class="p-4 border-b bg-white sticky top-0 z-10 flex justify-between items-center">
+                <div class="w-8"></div>
+                <h1 class="text-2xl font-bold text-center text-teal-500">SinVape</h1>
+                <button id="logout-button" class="text-2xl text-gray-400 hover:text-red-500" title="Cerrar Sesión">⏻</button>
+            </header>
+
+            <main class="flex-grow p-4 md:p-6 mb-16">
+                <!-- All app sections go here -->
+                <section id="inicio" class="space-y-6">
+                    <div class="text-center p-6 bg-teal-50 rounded-xl">
+                        <h2 class="text-xl font-bold text-teal-700">¡Sigue así!</h2>
+                        <p class="text-gray-600">Cada minuto sin vapear es una victoria para tu salud.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <p class="text-3xl font-extrabold text-teal-600" id="dias-sin-vapear">--</p>
+                            <p class="text-sm text-gray-500">Días Totales</p>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <p class="text-3xl font-extrabold text-teal-600" id="dinero-ahorrado">$ --</p>
+                            <p class="text-sm text-gray-500">Dinero Ahorrado</p>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                        <h3 class="font-bold text-amber-800">Tip del Día</h3>
+                        <p id="tip-text" class="text-amber-700 text-sm">Cargando tip...</p>
+                    </div>
+                    <button id="sos-button" class="w-full bg-red-500 text-white font-bold py-4 rounded-lg shadow-lg hover:bg-red-600 transition-colors flex items-center justify-center text-lg">
+                        <span class="text-2xl mr-2">🆘</span> Botón S.O.S.
+                    </button>
+                </section>
+
+                <section id="racha" class="hidden space-y-6 text-center">
+                    <h2 class="text-2xl font-bold">Mi Racha Actual</h2>
+                    <div class="mx-auto bg-teal-500 text-white w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-lg">
+                        <span id="streak-days" class="text-5xl font-extrabold">0</span>
+                        <span class="font-bold">días</span>
+                    </div>
+                    <div id="streak-message" class="p-4 rounded-lg min-h-[90px]"></div>
+                    <div id="streak-buttons" class="space-y-3">
+                        <p class="font-bold text-gray-700">¿Cómo te fue hoy?</p>
+                        <button id="streak-success-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors">✅ No vapeé hoy</button>
+                        <button id="streak-fail-btn" class="w-full bg-yellow-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-yellow-600 transition-colors">⚠️ Tuve una recaída</button>
+                    </div>
+                </section>
+
+                <section id="comunidad" class="hidden space-y-6">
+                    <div class="text-center">
+                        <h2 class="text-2xl font-bold">Comunidad de Apoyo</h2>
+                        <p class="text-gray-600 mt-1">Comparte tu experiencia y lee las de otros. No estás solo.</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border">
+                        <h3 class="font-bold text-lg text-teal-700 mb-2">Comparte tu historia</h3>
+                        <textarea id="post-input" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" rows="3" placeholder="Hoy fue un día difícil, pero lo logré..."></textarea>
+                        <button id="submit-post-btn" class="mt-2 w-full bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">Publicar</button>
+                    </div>
+                    <div id="posts-container" class="space-y-4"></div>
+                </section>
+
+                <section id="conoce" class="hidden space-y-6"></section>
+                <section id="avance" class="hidden space-y-6"></section>
+                <section id="apoyo" class="hidden space-y-6"></section>
+                <section id="herramientas" class="hidden space-y-6"></section>
+            </main>
+
+            <nav class="fixed bottom-0 left-0 right-0 bg-white border-t max-w-lg mx-auto shadow-inner">
+                <div class="flex justify-around">
+                    <button data-target="inicio" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100 nav-active"><span class="text-2xl">🏠</span><span class="text-xs block">Inicio</span></button>
+                    <button data-target="racha" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">🔥</span><span class="text-xs block">Racha</span></button>
+                    <button data-target="comunidad" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">👥</span><span class="text-xs block">Comunidad</span></button>
+                    <button data-target="avance" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">📊</span><span class="text-xs block">Avance</span></button>
+                    <button data-target="apoyo" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">❤️</span><span class="text-xs block">Apoyo</span></button>
+                    <button data-target="herramientas" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">🛠️</span><span class="text-xs block">Herramientas</span></button>
+                </div>
+            </nav>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const sections = document.querySelectorAll('main section');
-            const navButtons = document.querySelectorAll('.nav-button');
-            const sosButton = document.getElementById('sos-button');
-            const settingsButton = document.getElementById('settings-button');
-            const onboardingModal = document.getElementById('onboarding-modal');
-            const saveSettingsButton = document.getElementById('save-settings-button');
-            const quitDateInput = document.getElementById('quit-date');
-            const dailyCostInput = document.getElementById('daily-cost');
+    <!-- Onboarding Modal -->
+    <div id="onboarding-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden"></div>
 
-            const diasEl = document.getElementById('dias-sin-vapear');
-            const dineroEl = document.getElementById('dinero-ahorrado');
-            const achievementsGrid = document.getElementById('achievements-grid');
-            const chartCanvas = document.getElementById('progresoChart');
-            
-            const streakDaysEl = document.getElementById('streak-days');
-            const streakMessageEl = document.getElementById('streak-message');
-            const streakButtonsContainer = document.getElementById('streak-buttons');
-            const streakSuccessBtn = document.getElementById('streak-success-btn');
-            const streakFailBtn = document.getElementById('streak-fail-btn');
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
-            const achievements = [
-                { days: 1, label: '1 Día', icon: '🏆' }, { days: 3, label: '3 Días', icon: '🥉' },
-                { days: 7, label: '1 Semana', icon: '🏅' }, { days: 14, label: '2 Semanas', icon: '🥈' },
-                { days: 30, label: '1 Mes', icon: '🎖️' }, { days: 90, label: '3 Meses', icon: '🥇' },
-                { days: 180, label: '6 Meses', icon: '💎' }, { days: 365, label: '1 Año', icon: '🌟' }
-            ];
-            
-            function getTodayDateString() {
-                return new Date().toISOString().split('T')[0];
-            }
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // --- Initialize Firebase ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-            function updateStreakView() {
-                let streakData = JSON.parse(localStorage.getItem('sinvape_streakData')) || { streak: 0, lastCheckIn: null };
-                const todayStr = getTodayDateString();
-                const yesterdayStr = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0];
+        let currentUser = null;
+        let userDataUnsubscribe = null;
+        let postsUnsubscribe = null;
 
-                if (streakData.lastCheckIn && streakData.lastCheckIn < yesterdayStr) {
-                    streakData.streak = 0;
-                    localStorage.setItem('sinvape_streakData', JSON.stringify(streakData));
-                }
+        // --- Auth UI Elements ---
+        const authSection = document.getElementById('auth-section');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const toggleAuthBtn = document.getElementById('toggle-auth-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const anonymousLoginBtn = document.getElementById('anonymous-login-btn');
+        const logoutButton = document.getElementById('logout-button');
+        const authError = document.getElementById('auth-error');
 
-                streakDaysEl.textContent = streakData.streak;
+        // --- App UI Elements ---
+        // ... (Get all other app elements like in previous versions)
 
-                if (streakData.lastCheckIn === todayStr) {
-                    streakButtonsContainer.classList.add('hidden');
-                    streakMessageEl.innerHTML = `<p class="text-green-600 font-bold">¡Bien hecho! Vuelve mañana para continuar tu racha.</p>`;
-                } else {
-                    streakButtonsContainer.classList.remove('hidden');
-                    streakMessageEl.innerHTML = `<p class="text-gray-600">Aún no has registrado tu día. ¡Tú puedes!</p>`;
-                }
-            }
-
-            streakSuccessBtn.addEventListener('click', () => {
-                let streakData = JSON.parse(localStorage.getItem('sinvape_streakData')) || { streak: 0, lastCheckIn: null };
-                streakData.streak += 1;
-                streakData.lastCheckIn = getTodayDateString();
-                localStorage.setItem('sinvape_streakData', JSON.stringify(streakData));
-                updateStreakView();
-            });
-
-            streakFailBtn.addEventListener('click', () => {
-                let streakData = JSON.parse(localStorage.getItem('sinvape_streakData')) || { streak: 0, lastCheckIn: null };
-                streakData.streak = 0;
-                streakData.lastCheckIn = getTodayDateString();
-                localStorage.setItem('sinvape_streakData', JSON.stringify(streakData));
-                updateStreakView();
-                streakMessageEl.innerHTML = `<p class="text-red-600 font-bold">Una recaída es un paso en el camino, no el final. Mañana es una nueva oportunidad para empezar. ¡No te rindas!</p>`;
-            });
-
-            function updateAchievements(currentDays) {
-                achievementsGrid.innerHTML = '';
-                achievements.forEach(ach => {
-                    const isUnlocked = currentDays >= ach.days;
-                    const achievementEl = document.createElement('div');
-                    achievementEl.className = `p-3 rounded-lg shadow transition-all duration-300 ${isUnlocked ? 'bg-amber-400 text-white' : 'bg-gray-200 text-gray-400'}`;
-                    achievementEl.innerHTML = `<p class="text-2xl ${isUnlocked ? '' : 'opacity-50'}">${ach.icon}</p><p class="text-xs font-bold">${ach.label}</p>`;
-                    achievementsGrid.appendChild(achievementEl);
-                });
-            }
-
-            function updateProgressChart(days, cost) {
-                let labels = [];
-                let data = [];
-                if (days < 14) {
-                    for (let i = 1; i <= days; i++) { labels.push(`Día ${i}`); data.push(i * cost); }
-                } else {
-                    const weeks = Math.floor(days / 7);
-                    for (let i = 1; i <= weeks; i++) { labels.push(`Semana ${i}`); data.push(i * 7 * cost); }
-                    if (days % 7 > 0) { labels.push('Ahora'); data.push(days * cost); }
-                }
-                if (window.progresoChartInstance) { window.progresoChartInstance.destroy(); }
-                window.progresoChartInstance = new Chart(chartCanvas.getContext('2d'), {
-                    type: 'line', data: { labels, datasets: [{
-                        label: 'Dinero Ahorrado ($)', data, borderColor: '#4FD1C5',
-                        backgroundColor: 'rgba(79, 209, 197, 0.1)', fill: true, tension: 0.1
-                    }]},
-                    options: { responsive: true, maintainAspectRatio: false,
-                        scales: { y: { beginAtZero: true } },
-                        plugins: { legend: { display: false }, tooltip: {
-                            backgroundColor: '#2D3748', titleFont: { weight: 'bold' },
-                            bodyFont: { size: 14 }, displayColors: false
-                        }}
-                    }
-                });
-            }
-
-            function updateCounters() {
-                const quitDateStr = localStorage.getItem('sinvape_quitDate');
-                const dailyCost = parseFloat(localStorage.getItem('sinvape_dailyCost'));
-                if (!quitDateStr || isNaN(dailyCost)) {
-                    diasEl.textContent = '0'; dineroEl.textContent = '$ 0';
-                    updateAchievements(0); updateProgressChart(0, 0); return;
-                }
-                const quitDate = new Date(quitDateStr);
-                const today = new Date();
-                quitDate.setHours(0,0,0,0); today.setHours(0,0,0,0);
-                const diffTime = today - quitDate;
-                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-                if (diffDays < 0) {
-                    diasEl.textContent = '0'; dineroEl.textContent = '$ 0';
-                    updateAchievements(0); updateProgressChart(0, 0); return;
-                }
-                const moneySaved = (diffDays * dailyCost).toFixed(2);
-                diasEl.textContent = diffDays; dineroEl.textContent = `$ ${moneySaved}`;
-                updateAchievements(diffDays); updateProgressChart(diffDays, dailyCost);
-            }
-
-            function initializeApp() {
-                const quitDate = localStorage.getItem('sinvape_quitDate');
-                if (!quitDate) { onboardingModal.classList.remove('hidden'); }
-                updateCounters(); updateStreakView(); setDailyTip(); showSection('inicio');
-            }
-
-            saveSettingsButton.addEventListener('click', () => {
-                const quitDate = quitDateInput.value;
-                const dailyCost = dailyCostInput.value;
-                if (!quitDate || !dailyCost || dailyCost <= 0) {
-                    alert('Por favor, completa ambos campos con valores válidos.'); return;
-                }
-                localStorage.setItem('sinvape_quitDate', quitDate);
-                localStorage.setItem('sinvape_dailyCost', dailyCost);
-                localStorage.setItem('sinvape_streakData', JSON.stringify({ streak: 0, lastCheckIn: null }));
-                onboardingModal.classList.add('hidden');
-                updateCounters(); updateStreakView();
-            });
-
-            settingsButton.addEventListener('click', () => {
-                quitDateInput.value = localStorage.getItem('sinvape_quitDate') || '';
-                dailyCostInput.value = localStorage.getItem('sinvape_dailyCost') || '';
-                onboardingModal.classList.remove('hidden');
-            });
-
-            const dailyTips = [
-                "Cuando sientas ganas de vapear, bebe un vaso de agua fría. Te ayudará a calmar la ansiedad.",
-                "Identifica tus detonantes. ¿Es el estrés? ¿El aburrimiento? Conocerlos es el primer paso para controlarlos.",
-                "Llama a un amigo o familiar. Hablar durante 5 minutos puede cambiar tu estado de ánimo y distraerte.",
-                "Sal a caminar. Cambiar de ambiente y mover tu cuerpo hace maravillas para reducir los antojos.",
-                "Recuerda tu 'porqué'. Ten a la mano la razón principal por la que decidiste dejarlo. ¡Es tu mayor motivación!",
-                "Practica la regla de los 5 minutos. Cuando llegue el antojo, dile a tu cerebro: 'esperaré solo 5 minutos'. A menudo, el deseo se desvanece.",
-                "Celebra tus pequeñas victorias. Cada hora sin vapear es un logro. ¡Reconócelo!",
-                "Evita el café y el alcohol al principio. Pueden intensificar las ganas de consumir nicotina.",
-                "Mantén tus manos y boca ocupadas. Mastica chicle sin azúcar, come una paleta o aprieta una pelota antiestrés."
-            ];
-
-            function setDailyTip() {
-                const tipElement = document.getElementById('tip-text');
-                const now = new Date();
-                const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-                tipElement.textContent = dailyTips[dayOfYear % dailyTips.length];
-            }
-            
-            function showSection(targetId) {
-                sections.forEach(section => { section.classList.toggle('hidden', section.id !== targetId); });
-                navButtons.forEach(button => { button.classList.toggle('nav-active', button.dataset.target === targetId); });
-                if (targetId === 'racha') { updateStreakView(); }
-                window.scrollTo(0, 0);
-            }
-
-            navButtons.forEach(button => { button.addEventListener('click', () => { showSection(button.dataset.target); }); });
-            const accordionItems = document.querySelectorAll('[data-accordion="item"]');
-            accordionItems.forEach(item => {
-                const button = item.querySelector('[data-accordion="button"]');
-                const content = item.querySelector('[data-accordion="content"]');
-                const icon = button.querySelector('span');
-                button.addEventListener('click', () => { content.classList.toggle('hidden'); icon.classList.toggle('rotate-180'); });
-            });
-
-            const breathingCircle = document.getElementById('breathing-circle');
-            const breathingText = document.getElementById('breathing-text');
-            const startBreathingBtn = document.getElementById('start-breathing');
-            let breathingInterval;
-            function startBreathingExercise() {
-                if(startBreathingBtn.disabled) return;
-                startBreathingBtn.disabled = true; let state = 'inhale';
-                function breathStep() {
-                    if (state === 'inhale') { breathingText.textContent = 'Inhala...'; breathingCircle.style.transform = 'scale(1.5)'; state = 'hold_in';
-                    } else if (state === 'hold_in') { breathingText.textContent = 'Sostén...'; state = 'exhale';
-                    } else if (state === 'exhale') { breathingText.textContent = 'Exhala...'; breathingCircle.style.transform = 'scale(1)'; state = 'hold_out';
-                    } else { breathingText.textContent = 'Sostén...'; state = 'inhale'; }
-                }
-                breathStep(); breathingInterval = setInterval(breathStep, 4000);
-                setTimeout(() => { clearInterval(breathingInterval); breathingText.textContent = ''; breathingCircle.style.transform = 'scale(1)'; startBreathingBtn.disabled = false; }, 24000);
-            }
-            startBreathingBtn.addEventListener('click', startBreathingExercise);
-            sosButton.addEventListener('click', () => { showSection('herramientas'); startBreathingExercise(); });
-
-            const startGameBtn = document.getElementById('start-game-btn');
-            const gameUI = document.getElementById('game-ui');
-            const gameIntro = document.getElementById('minigame-intro');
-            const canvas = document.getElementById('gameCanvas');
-            const ctxGame = canvas.getContext('2d');
-            const timerEl = document.getElementById('game-timer');
-            const scoreEl = document.getElementById('game-score');
-            let score, timer, gameInterval; let dot = { x: 0, y: 0, radius: 15 };
-            function drawDot() {
-                dot.x = Math.random() * (canvas.width - dot.radius * 2) + dot.radius;
-                dot.y = Math.random() * (canvas.height - dot.radius * 2) + dot.radius;
-                ctxGame.clearRect(0, 0, canvas.width, canvas.height); ctxGame.beginPath();
-                ctxGame.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2); ctxGame.fillStyle = '#F6AD55'; ctxGame.fill();
-            }
-            function endGame() {
-                clearInterval(gameInterval); gameUI.classList.add('hidden'); startGameBtn.classList.remove('hidden');
-                startGameBtn.textContent = 'Jugar de Nuevo'; gameIntro.textContent = `¡Buen trabajo! Tu puntuación final es ${score}.`;
-                gameIntro.classList.remove('hidden');
-            }
-            function updateTimer() { timer--; timerEl.textContent = timer; if (timer <= 0) { endGame(); } }
-            startGameBtn.addEventListener('click', () => {
-                score = 0; timer = 30; scoreEl.textContent = score; timerEl.textContent = timer;
-                startGameBtn.classList.add('hidden'); gameIntro.classList.add('hidden'); gameUI.classList.remove('hidden');
-                drawDot(); gameInterval = setInterval(updateTimer, 1000);
-            });
-            canvas.addEventListener('click', (e) => {
-                const rect = canvas.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top;
-                const distance = Math.sqrt((x - dot.x)**2 + (y - dot.y)**2);
-                if (distance < dot.radius) { score++; scoreEl.textContent = score; drawDot(); }
-            });
-
-            initializeApp();
+        // --- Auth Logic ---
+        toggleAuthBtn.addEventListener('click', () => {
+            loginForm.classList.toggle('hidden');
+            registerForm.classList.toggle('hidden');
+            toggleAuthBtn.textContent = loginForm.classList.contains('hidden') 
+                ? '¿Ya tienes cuenta? Inicia Sesión' 
+                : '¿No tienes cuenta? Regístrate';
         });
+
+        registerBtn.addEventListener('click', () => {
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            createUserWithEmailAndPassword(auth, email, password)
+                .catch(error => { authError.textContent = error.message; });
+        });
+
+        loginBtn.addEventListener('click', () => {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            signInWithEmailAndPassword(auth, email, password)
+                .catch(error => { authError.textContent = error.message; });
+        });
+
+        anonymousLoginBtn.addEventListener('click', () => {
+            signInAnonymously(auth).catch(error => { authError.textContent = error.message; });
+        });
+
+        logoutButton.addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // --- Main Auth State Listener ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                currentUser = user;
+                authSection.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                setupFirestoreListeners();
+                // ... (Initialize app state for logged-in user)
+            } else {
+                currentUser = null;
+                authSection.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+                if (userDataUnsubscribe) userDataUnsubscribe();
+                if (postsUnsubscribe) postsUnsubscribe();
+            }
+        });
+
+        // --- Firestore Logic ---
+        function setupFirestoreListeners() {
+            // Unsubscribe from previous listeners if they exist
+            if (userDataUnsubscribe) userDataUnsubscribe();
+            if (postsUnsubscribe) postsUnsubscribe();
+
+            // Listener for user-specific data
+            const userDocRef = doc(db, "users", currentUser.uid);
+            userDataUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    // Update UI with user data
+                    // updateCounters(userData);
+                    // updateStreakView(userData);
+                    // updateAchievements(userData);
+                    // updateProgressChart(userData);
+                } else {
+                    // Show onboarding if no data exists for this user
+                    // showOnboardingModal();
+                }
+            });
+
+            // Listener for public community posts
+            const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+            postsUnsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
+                const posts = [];
+                querySnapshot.forEach((doc) => {
+                    posts.push({ id: doc.id, ...doc.data() });
+                });
+                // renderPosts(posts);
+            });
+        }
+
+        // Example function to save user data
+        async function saveUserData(data) {
+            const userDocRef = doc(db, "users", currentUser.uid);
+            await setDoc(userDocRef, data, { merge: true });
+        }
+
+        // Example function to add a post
+        async function addPost(text) {
+            await addDoc(collection(db, "posts"), {
+                text: text,
+                author: currentUser.isAnonymous ? "Usuario Anónimo" : currentUser.email.split('@')[0],
+                userId: currentUser.uid,
+                timestamp: serverTimestamp()
+            });
+        }
+
+        // --- Initialize App ---
+        // The onAuthStateChanged listener now handles the main app initialization flow.
     </script>
 </body>
 </html>

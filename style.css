@@ -1,22 +1,94 @@
 body {
-  margin: 0;
-  overflow: hidden; /* Evita que aparezcan barras de scroll */
-  background-color: #f0f0f0; /* Un color de fondo suave */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  font-family: sans-serif;
+    margin: 0;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #333;
 }
 
+/* Contenedor principal */
+#auth-container, #game-container {
+    text-align: center;
+}
+
+/* Estilos para el formulario de login/registro */
+#auth-container {
+    background-color: #fff;
+    padding: 2rem 3rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 400px;
+}
+
+#auth-container h2 {
+    margin-top: 0;
+    font-size: 1.8rem;
+}
+
+#auth-container p {
+    margin-bottom: 1.5rem;
+    color: #666;
+}
+
+input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box; /* Importante para que el padding no afecte el ancho */
+}
+
+#auth-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+button {
+    flex-grow: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button#register-btn {
+    background-color: #28a745;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.error {
+    color: #dc3545;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    min-height: 1em;
+}
+
+/* Estilos para el juego */
 #gameCanvas {
-  background-color: #ffffff;
-  border: 2px solid #000000;
+    background-color: #ffffff;
+    border: 2px solid #000000;
 }
 
-/* Estilos para posibles textos o botones que quieras añadir después */
-h1 {
-  position: absolute;
-  top: 20px;
-  color: #333;
+#logout-btn {
+    display: block;
+    margin: 1rem auto 0;
+    width: 200px;
+    background-color: #6c757d;
+}
+
+/* Clase para ocultar elementos */
+.hidden {
+    display: none;
 }
