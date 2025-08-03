@@ -2,14 +2,14 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// --- Jugador ---
+// --- Jugador (VERSIÓN ACTUALIZADA) ---
 const player = {
   x: canvas.width / 2 - 25, // Centrado horizontalmente
   y: canvas.height - 60,    // En la parte inferior
   width: 50,
   height: 50,
-  color: 'blue',
-  speed: 5,
+  color: 'green',             // <--- CAMBIO REALIZADO
+  speed: 8,                 // <--- CAMBIO REALIZADO
   dx: 0 // Dirección del movimiento horizontal
 };
 
