@@ -27,7 +27,6 @@
 <body class="bg-slate-50 text-gray-800">
 
     <div id="app" class="max-w-lg mx-auto bg-white min-h-screen shadow-lg flex flex-col">
-        <!-- Auth Section -->
         <section id="auth-section" class="flex flex-col items-center justify-center h-screen p-6">
             <h1 class="text-4xl font-bold text-teal-500 mb-2">SinVape</h1>
             <p class="text-gray-600 mb-8">Tu viaje hacia una vida libre de vapeo empieza aquí.</p>
@@ -51,7 +50,6 @@
             </div>
         </section>
 
-        <!-- Main App Container (hidden by default) -->
         <div id="app-container" class="hidden flex-col min-h-screen">
             <header class="p-4 border-b bg-white sticky top-0 z-10 flex justify-between items-center">
                 <div class="w-8"></div>
@@ -60,7 +58,6 @@
             </header>
 
             <main class="flex-grow p-4 md:p-6 mb-16">
-                <!-- All app sections go here -->
                 <section id="inicio" class="space-y-6"></section>
                 <section id="racha" class="hidden space-y-6 text-center"></section>
                 <section id="comunidad" class="hidden space-y-6"></section>
@@ -187,40 +184,59 @@
                 <div class="space-y-4">
                     <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
                         <button class="w-full flex justify-between items-center text-left" data-accordion="button">
-                            <h3 class="font-bold text-lg text-teal-700">¿Por qué es tan difícil dejarlo?</h3>
-                            <span class="text-2xl transition-transform">▾</span>
+                        <h3 class="font-bold text-lg text-teal-700">Adicción: Una Enfermedad Cerebral</h3>
+                        <span class="text-2xl transition-transform">▾</span>
                         </button>
                         <div class="mt-2 text-gray-700 hidden" data-accordion="content">
-                            <p>La adicción no es una falla moral, sino una enfermedad que cambia el cerebro. Sustancias como la nicotina alteran los circuitos de dopamina, responsables del placer. Con el tiempo, tu cerebro se acostumbra y pierde la capacidad de sentir placer por cosas naturales, necesitando la sustancia solo para sentirse "normal".</p>
+                            <p>La ciencia define la adicción como una enfermedad crónica del cerebro, no como una falla moral<sup>, </sup>. Las drogas modifican la química y estructura cerebral, especialmente los circuitos de dopamina relacionados con el placer<sup></sup>. Esto provoca una pérdida de control y una búsqueda compulsiva de la sustancia a pesar de las consecuencias negativas, haciendo necesario el tratamiento para poder parar<sup>, </sup>.</p>
                         </div>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
                         <button class="w-full flex justify-between items-center text-left" data-accordion="button">
-                            <h3 class="font-bold text-lg text-teal-700">La Raíz del Dolor</h3>
-                            <span class="text-2xl transition-transform">▾</span>
+                        <h3 class="font-bold text-lg text-teal-700">El Papel del Dolor y el Trauma</h3>
+                        <span class="text-2xl transition-transform">▾</span>
                         </button>
                         <div class="mt-2 text-gray-700 hidden" data-accordion="content">
-                            <p>Muchas veces, una adicción no se trata de buscar placer, sino de escapar de un dolor interno. Experiencias difíciles pueden generar un sufrimiento que intentamos "automedicar" con sustancias que nos alivian a corto plazo. La pregunta clave no es "¿por qué la adicción?", sino "¿por qué duele?".</p>
+                            <p>La pregunta fundamental no es "¿por qué la adicción?", sino "¿por qué el dolor?"<sup></sup>. Frecuentemente, una adicción está arraigada en experiencias internas dolorosas o traumáticas<sup></sup>. El consumo de sustancias se convierte en un intento de aliviar ese sufrimiento a corto plazo, aunque a la larga tenga consecuencias negativas<sup></sup>.</p>
                         </div>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
                         <button class="w-full flex justify-between items-center text-left" data-accordion="button">
-                            <h3 class="font-bold text-lg text-teal-700">Mitos vs. Realidades del Vapeo</h3>
+                            <h3 class="font-bold text-lg text-teal-700">¿Por qué es más riesgoso en la adolescencia?</h3>
                             <span class="text-2xl transition-transform">▾</span>
                         </button>
                         <div class="mt-2 text-gray-700 hidden" data-accordion="content">
-                            <p><strong>Mito:</strong> Es solo vapor de agua inofensivo.</p>
-                            <p><strong>Realidad:</strong> El aerosol de los vapes contiene nicotina, saborizantes y químicos dañinos que se convierten en partículas finas que se alojan en tus pulmones.</p>
+                            <p>El cerebro adolescente está en pleno desarrollo hasta los 25 años<sup></sup>. Durante esta etapa, el sistema de "aceleración" (búsqueda de recompensas y emociones) madura más rápido que el de "frenos" (juicio, control de impulsos)<sup></sup>. Exponer el cerebro a las drogas en este período crítico puede causar daños mucho más graves y, en algunos casos, irreversibles<sup></sup>.</p>
                         </div>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
                         <button class="w-full flex justify-between items-center text-left" data-accordion="button">
-                            <h3 class="font-bold text-lg text-teal-700">Daños Físicos a tu Salud</h3>
-                             <span class="text-2xl transition-transform">▾</span>
+                            <h3 class="font-bold text-lg text-teal-700">Factores de Riesgo a Conocer</h3>
+                            <span class="text-2xl transition-transform">▾</span>
                         </button>
                         <div class="mt-2 text-gray-700 hidden" data-accordion="content">
-                            <p><strong>• Sistema Respiratorio:</strong> Puede causar inflamación pulmonar (EPOC), tos crónica, asma y aumentar el riesgo de cáncer.</p>
-                            <p><strong>• Sistema Cardiovascular:</strong> La nicotina aumenta tu ritmo cardíaco y presión arterial, elevando el riesgo de arterioesclerosis e infartos.</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Conducta agresiva a edad temprana<sup></sup>.</li>
+                                <li>Habilidades sociales deficientes<sup></sup>.</li>
+                                <li>Falta de supervisión de los padres<sup></sup>.</li>
+                                <li>Tener amigos o compañeros que abusan de sustancias<sup></sup>.</li>
+                                <li>Fácil disponibilidad de la droga<sup></sup>.</li>
+                                <li>Pobreza y estrés sostenido en la vida temprana<sup>, </sup>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
+                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
+                            <h3 class="font-bold text-lg text-teal-700">Daños Físicos del Vapeo</h3>
+                            <span class="text-2xl transition-transform">▾</span>
+                        </button>
+                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
+                            <p>Lejos de ser inofensivo, el vapeo puede causar graves daños a la salud<sup></sup>:</p>
+                            <ul class="list-disc list-inside space-y-1 mt-2">
+                                <li><strong>Daños respiratorios:</strong> EPOC, asma y riesgo de cáncer<sup></sup>.</li>
+                                <li><strong>Daños cardiovasculares:</strong> Arterioesclerosis e infartos por el efecto de la nicotina<sup></sup>.</li>
+                                <li><strong>Síntomas reportados:</strong> Dificultad para respirar, tos seca, dolor en el tórax y fatiga<sup></sup>.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>`,
