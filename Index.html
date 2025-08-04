@@ -9,17 +9,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Calm Health Palette -->
-    <!-- Application Structure Plan: A single-page application emulating a mobile app experience with Firebase integration. An auth wall now precedes the main app. Navigation is handled by a fixed bottom bar that switches between seven main sections. -->
-    <!-- Visualization & Content Choices: Progress is shown with large text counters. The Streak section provides daily engagement. The Community section allows for anonymous peer support. The Support section offers direct links to professional help. Health risks and myths are presented in interactive cards. Gamification is handled via unlockable badges. Coping mechanisms include a guided breathing animation and a distraction minigame. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #F7FAFC; }
         h1, h2, h3 { font-family: 'Nunito', sans-serif; }
         .nav-active { color: #4FD1C5; }
         .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
-        .breathing-circle { transition: transform 4s ease-in-out; }
-        #gameCanvas { cursor: pointer; background-color: #f7fafc; border-radius: 0.5rem; }
+        .breathing-circle { transition: all 4s ease-in-out; }
+        #gameCanvas { cursor: pointer; background-color: #edf2f7; border-radius: 0.5rem; }
+        .memory-card { perspective: 1000px; }
+        .memory-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+        .memory-card.is-flipped .memory-card-inner { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border-radius: 0.5rem; }
+        .card-front { background-color: #e2e8f0; }
+        .card-back { background-color: #4fd1c5; color: white; transform: rotateY(180deg); }
     </style>
 </head>
 <body class="bg-slate-50 text-gray-800">
@@ -40,7 +42,7 @@
                     <input type="password" id="register-password" placeholder="Contraseña" class="w-full p-3 border border-gray-300 rounded-md mt-2">
                     <button id="register-btn" class="w-full mt-4 bg-blue-500 text-white font-bold py-3 rounded-lg hover:bg-blue-600">Crear Cuenta</button>
                 </div>
-                <p id="auth-error" class="text-red-500 text-sm text-center"></p>
+                <p id="auth-error" class="text-red-500 text-sm text-center min-h-[20px]"></p>
                 <div class="text-center">
                     <button id="toggle-auth-btn" class="text-sm text-teal-600 hover:underline">¿No tienes cuenta? Regístrate</button>
                     <p class="text-gray-400 my-2">o</p>
@@ -50,7 +52,7 @@
         </section>
 
         <!-- Main App Container (hidden by default) -->
-        <div id="app-container" class="hidden">
+        <div id="app-container" class="hidden flex-col min-h-screen">
             <header class="p-4 border-b bg-white sticky top-0 z-10 flex justify-between items-center">
                 <div class="w-8"></div>
                 <h1 class="text-2xl font-bold text-center text-teal-500">SinVape</h1>
@@ -59,60 +61,11 @@
 
             <main class="flex-grow p-4 md:p-6 mb-16">
                 <!-- All app sections go here -->
-                <section id="inicio" class="space-y-6">
-                    <div class="text-center p-6 bg-teal-50 rounded-xl">
-                        <h2 class="text-xl font-bold text-teal-700">¡Sigue así!</h2>
-                        <p class="text-gray-600">Cada minuto sin vapear es una victoria para tu salud.</p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="text-3xl font-extrabold text-teal-600" id="dias-sin-vapear">--</p>
-                            <p class="text-sm text-gray-500">Días Totales</p>
-                        </div>
-                        <div class="bg-gray-100 p-4 rounded-lg">
-                            <p class="text-3xl font-extrabold text-teal-600" id="dinero-ahorrado">$ --</p>
-                            <p class="text-sm text-gray-500">Dinero Ahorrado</p>
-                        </div>
-                    </div>
-                    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
-                        <h3 class="font-bold text-amber-800">Tip del Día</h3>
-                        <p id="tip-text" class="text-amber-700 text-sm">Cargando tip...</p>
-                    </div>
-                    <button id="sos-button" class="w-full bg-red-500 text-white font-bold py-4 rounded-lg shadow-lg hover:bg-red-600 transition-colors flex items-center justify-center text-lg">
-                        <span class="text-2xl mr-2">🆘</span> Botón S.O.S.
-                    </button>
-                </section>
-
-                <section id="racha" class="hidden space-y-6 text-center">
-                    <h2 class="text-2xl font-bold">Mi Racha Actual</h2>
-                    <div class="mx-auto bg-teal-500 text-white w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-lg">
-                        <span id="streak-days" class="text-5xl font-extrabold">0</span>
-                        <span class="font-bold">días</span>
-                    </div>
-                    <div id="streak-message" class="p-4 rounded-lg min-h-[90px]"></div>
-                    <div id="streak-buttons" class="space-y-3">
-                        <p class="font-bold text-gray-700">¿Cómo te fue hoy?</p>
-                        <button id="streak-success-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors">✅ No vapeé hoy</button>
-                        <button id="streak-fail-btn" class="w-full bg-yellow-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-yellow-600 transition-colors">⚠️ Tuve una recaída</button>
-                    </div>
-                </section>
-
-                <section id="comunidad" class="hidden space-y-6">
-                    <div class="text-center">
-                        <h2 class="text-2xl font-bold">Comunidad de Apoyo</h2>
-                        <p class="text-gray-600 mt-1">Comparte tu experiencia y lee las de otros. No estás solo.</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border">
-                        <h3 class="font-bold text-lg text-teal-700 mb-2">Comparte tu historia</h3>
-                        <textarea id="post-input" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" rows="3" placeholder="Hoy fue un día difícil, pero lo logré..."></textarea>
-                        <button id="submit-post-btn" class="mt-2 w-full bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">Publicar</button>
-                    </div>
-                    <div id="posts-container" class="space-y-4"></div>
-                </section>
-
+                <section id="inicio" class="space-y-6"></section>
+                <section id="racha" class="hidden space-y-6 text-center"></section>
+                <section id="comunidad" class="hidden space-y-6"></section>
                 <section id="conoce" class="hidden space-y-6"></section>
                 <section id="avance" class="hidden space-y-6"></section>
-                <section id="apoyo" class="hidden space-y-6"></section>
                 <section id="herramientas" class="hidden space-y-6"></section>
             </main>
 
@@ -121,33 +74,33 @@
                     <button data-target="inicio" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100 nav-active"><span class="text-2xl">🏠</span><span class="text-xs block">Inicio</span></button>
                     <button data-target="racha" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">🔥</span><span class="text-xs block">Racha</span></button>
                     <button data-target="comunidad" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">👥</span><span class="text-xs block">Comunidad</span></button>
+                    <button data-target="conoce" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">📚</span><span class="text-xs block">Conoce</span></button>
                     <button data-target="avance" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">📊</span><span class="text-xs block">Avance</span></button>
-                    <button data-target="apoyo" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">❤️</span><span class="text-xs block">Apoyo</span></button>
                     <button data-target="herramientas" class="nav-button flex-1 py-2 px-1 text-center text-gray-500 hover:bg-gray-100"><span class="text-2xl">🛠️</span><span class="text-xs block">Herramientas</span></button>
                 </div>
             </nav>
         </div>
     </div>
 
-    <!-- Onboarding Modal -->
     <div id="onboarding-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden"></div>
 
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, query, orderBy, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
         // --- Firebase Configuration ---
         const firebaseConfig = {
-    apiKey: "AIzaSyB_xukFwu5YTlcyYAPKDQI5P-8jZ5DLJxA",
-    authDomain: "sinvape-app-rigomares.firebaseapp.com",
-    projectId: "sinvape-app-rigomares",
-    storageBucket: "sinvape-app-rigomares.appspot.com",
-    messagingSenderId: "803922018785",
-    appId: "1:803922018785:web:8e7e9228cc44d8ce5ad2a0",
-    measurementId: "G-WFBW62R557"
-};
+            apiKey: "AIzaSyB_xukFwu5YTlcyYAPKDQI5P-8jZ5DLJxA",
+            authDomain: "sinvape-app-rigomares.firebaseapp.com",
+            projectId: "sinvape-app-rigomares",
+            storageBucket: "sinvape-app-rigomares.appspot.com",
+            messagingSenderId: "803922018785",
+            appId: "1:803922018785:web:8e7e9228cc44d8ce5ad2a0",
+            measurementId: "G-WFBW62R557"
+        };
+        
         // --- Initialize Firebase ---
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -156,8 +109,15 @@
         let currentUser = null;
         let userDataUnsubscribe = null;
         let postsUnsubscribe = null;
+        let breathingInterval = null;
 
-        // --- Auth UI Elements ---
+        // --- App Constants & UI Elements ---
+        const achievements = [
+            { days: 1, label: '1 Día', icon: '🏆' }, { days: 3, label: '3 Días', icon: '🥉' },
+            { days: 7, label: '1 Semana', icon: '🏅' }, { days: 14, label: '2 Semanas', icon: '🥈' },
+            { days: 30, label: '1 Mes', icon: '🎖️' }, { days: 90, label: '3 Meses', icon: '🥇' },
+            { days: 180, label: '6 Meses', icon: '💎' }, { days: 365, label: '1 Año', icon: '🌟' }
+        ];
         const authSection = document.getElementById('auth-section');
         const appContainer = document.getElementById('app-container');
         const loginForm = document.getElementById('login-form');
@@ -168,38 +128,267 @@
         const anonymousLoginBtn = document.getElementById('anonymous-login-btn');
         const logoutButton = document.getElementById('logout-button');
         const authError = document.getElementById('auth-error');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const onboardingModal = document.getElementById('onboarding-modal');
+        const mainContent = document.querySelector('main');
 
-        // --- App UI Elements ---
-        // ... (Get all other app elements like in previous versions)
+        // --- Templates for Dynamic Content ---
+        const sectionTemplates = {
+            inicio: `
+                <div class="text-center p-6 bg-teal-50 rounded-xl">
+                    <h2 class="text-xl font-bold text-teal-700">¡Sigue así!</h2>
+                    <p class="text-gray-600">Cada minuto sin vapear es una victoria para tu salud.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="text-3xl font-extrabold text-teal-600" id="dias-sin-vapear">--</p>
+                        <p class="text-sm text-gray-500">Días Totales</p>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="text-3xl font-extrabold text-teal-600" id="dinero-ahorrado">$ --</p>
+                        <p class="text-sm text-gray-500">Dinero Ahorrado</p>
+                    </div>
+                </div>
+                <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                    <h3 class="font-bold text-amber-800">Tip del Día</h3>
+                    <p id="tip-text" class="text-amber-700 text-sm">Cargando tip...</p>
+                </div>
+                <button id="sos-button" class="w-full bg-red-500 text-white font-bold py-4 rounded-lg shadow-lg hover:bg-red-600 transition-colors flex items-center justify-center text-lg">
+                    <span class="text-2xl mr-2">🆘</span> Botón S.O.S.
+                </button>`,
+            racha: `
+                <h2 class="text-2xl font-bold">Mi Racha Actual</h2>
+                <div class="mx-auto bg-teal-500 text-white w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-lg">
+                    <span id="streak-days" class="text-5xl font-extrabold">0</span>
+                    <span class="font-bold">días</span>
+                </div>
+                <div id="streak-message" class="p-4 rounded-lg min-h-[90px]"></div>
+                <div id="streak-buttons" class="space-y-3">
+                    <p class="font-bold text-gray-700">¿Cómo te fue hoy?</p>
+                    <button id="streak-success-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors">✅ No vapeé hoy</button>
+                    <button id="streak-fail-btn" class="w-full bg-yellow-500 text-white font-bold py-3 rounded-lg shadow-md hover:bg-yellow-600 transition-colors">⚠️ Tuve una recaída</button>
+                </div>`,
+            comunidad: `
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold">Comunidad de Apoyo</h2>
+                    <p class="text-gray-600 mt-1">Comparte tu experiencia y lee las de otros. No estás solo.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border">
+                    <h3 class="font-bold text-lg text-teal-700 mb-2">Comparte tu historia</h3>
+                    <textarea id="post-input" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" rows="3" placeholder="Hoy fue un día difícil, pero lo logré..."></textarea>
+                    <button id="submit-post-btn" class="mt-2 w-full bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">Publicar</button>
+                </div>
+                <div id="posts-container" class="space-y-4"></div>`,
+            conoce: `
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold">Centro de Conocimiento</h2>
+                    <p class="text-gray-600 mt-1">Información clara para tomar las mejores decisiones.</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
+                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
+                            <h3 class="font-bold text-lg text-teal-700">¿Por qué es tan difícil dejarlo?</h3>
+                            <span class="text-2xl transition-transform">▾</span>
+                        </button>
+                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
+                            <p>La adicción no es una falla moral, sino una enfermedad que cambia el cerebro. Sustancias como la nicotina alteran los circuitos de dopamina, responsables del placer. Con el tiempo, tu cerebro se acostumbra y pierde la capacidad de sentir placer por cosas naturales, necesitando la sustancia solo para sentirse "normal".</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
+                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
+                            <h3 class="font-bold text-lg text-teal-700">La Raíz del Dolor</h3>
+                            <span class="text-2xl transition-transform">▾</span>
+                        </button>
+                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
+                            <p>Muchas veces, una adicción no se trata de buscar placer, sino de escapar de un dolor interno. Experiencias difíciles pueden generar un sufrimiento que intentamos "automedicar" con sustancias que nos alivian a corto plazo. La pregunta clave no es "¿por qué la adicción?", sino "¿por qué duele?".</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
+                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
+                            <h3 class="font-bold text-lg text-teal-700">Mitos vs. Realidades del Vapeo</h3>
+                            <span class="text-2xl transition-transform">▾</span>
+                        </button>
+                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
+                            <p><strong>Mito:</strong> Es solo vapor de agua inofensivo.</p>
+                            <p><strong>Realidad:</strong> El aerosol de los vapes contiene nicotina, saborizantes y químicos dañinos que se convierten en partículas finas que se alojan en tus pulmones.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border" data-accordion="item">
+                        <button class="w-full flex justify-between items-center text-left" data-accordion="button">
+                            <h3 class="font-bold text-lg text-teal-700">Daños Físicos a tu Salud</h3>
+                             <span class="text-2xl transition-transform">▾</span>
+                        </button>
+                        <div class="mt-2 text-gray-700 hidden" data-accordion="content">
+                            <p><strong>• Sistema Respiratorio:</strong> Puede causar inflamación pulmonar (EPOC), tos crónica, asma y aumentar el riesgo de cáncer.</p>
+                            <p><strong>• Sistema Cardiovascular:</strong> La nicotina aumenta tu ritmo cardíaco y presión arterial, elevando el riesgo de arterioesclerosis e infartos.</p>
+                        </div>
+                    </div>
+                </div>`,
+            avance: `
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold">Mi Avance</h2>
+                    <p class="text-gray-600 mt-1">Visualiza tu increíble progreso.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg mb-2 text-center">Ahorro a lo Largo del Tiempo</h3>
+                    <div class="chart-container bg-gray-50 p-2 rounded-lg">
+                        <canvas id="progresoChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg mb-2 text-center">Logros Desbloqueados</h3>
+                    <div id="achievements-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-4 text-center"></div>
+                </div>`,
+            herramientas: `
+                <div id="tools-main-menu">
+                    <div class="text-center">
+                        <h2 class="text-2xl font-bold">Caja de Herramientas</h2>
+                        <p class="text-gray-600 mt-1">Recursos para los momentos difíciles.</p>
+                    </div>
+                    <div class="space-y-4 mt-6">
+                        <button data-tool="respiraciones" class="w-full text-left bg-white p-4 rounded-lg shadow-sm border flex items-center space-x-4 hover:bg-gray-50">
+                            <span class="text-4xl">🧘</span>
+                            <div>
+                                <h3 class="font-bold text-lg text-teal-700">Respiraciones</h3>
+                                <p class="text-sm text-gray-600">Ejercicios guiados para calmar la ansiedad.</p>
+                            </div>
+                        </button>
+                         <button data-tool="juegos" class="w-full text-left bg-white p-4 rounded-lg shadow-sm border flex items-center space-x-4 hover:bg-gray-50">
+                            <span class="text-4xl">🎮</span>
+                            <div>
+                                <h3 class="font-bold text-lg text-teal-700">Juegos</h3>
+                                <p class="text-sm text-gray-600">Distracciones rápidas para enfocar tu mente.</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>`
+        };
+
+        const onboardingTemplate = `
+            <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+                <h2 class="text-xl font-bold mb-4 text-center">¡Bienvenido a SinVape!</h2>
+                <p class="text-gray-600 mb-4">Para personalizar tu experiencia, por favor, danos un par de datos.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="quit-date-modal" class="block text-sm font-medium text-gray-700">¿Cuándo dejaste de vapear?</label>
+                        <input type="date" id="quit-date-modal" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="daily-cost-modal" class="block text-sm font-medium text-gray-700">¿Cuánto gastabas al día? (MXN)</label>
+                        <input type="number" id="daily-cost-modal" placeholder="Ej: 50" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                </div>
+                <button id="save-settings-button" class="mt-6 w-full bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">Guardar y Empezar</button>
+            </div>`;
+        
+        const breathingMenuTemplate = `
+            <div class="text-center h-full flex flex-col p-4">
+                <div class="relative mb-4">
+                    <button id="back-to-tools-btn" class="absolute top-0 left-0 text-gray-500 text-3xl hover:text-gray-800 focus:outline-none">‹</button>
+                    <h2 class="text-2xl font-bold">Ejercicios de Respiración</h2>
+                </div>
+                <p class="text-gray-600 mt-1 mb-6">Elige una técnica para empezar.</p>
+                <div class="space-y-4">
+                    <button data-exercise="cuadrada" class="w-full text-left bg-white p-4 rounded-lg shadow-sm border hover:bg-gray-50">
+                        <h3 class="font-bold text-lg text-teal-700">Respiración Cuadrada (4-4-4-4)</h3>
+                        <p class="text-sm text-gray-600">Para calmar la mente y encontrar balance.</p>
+                    </button>
+                    <button data-exercise="relajante" class="w-full text-left bg-white p-4 rounded-lg shadow-sm border hover:bg-gray-50">
+                        <h3 class="font-bold text-lg text-teal-700">Respiración Relajante (4-7-8)</h3>
+                        <p class="text-sm text-gray-600">Ideal para reducir el estrés agudo.</p>
+                    </button>
+                    <button data-exercise="enfoque" class="w-full text-left bg-white p-4 rounded-lg shadow-sm border hover:bg-gray-50">
+                        <h3 class="font-bold text-lg text-teal-700">Respiración para Enfocarse (4-6)</h3>
+                        <p class="text-sm text-gray-600">Para mejorar la concentración y claridad.</p>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const breathingAnimationTemplate = `
+            <div class="text-center h-full flex flex-col p-4">
+                 <div class="relative mb-4">
+                    <button id="back-to-breathing-menu-btn" class="absolute top-0 left-0 text-gray-500 text-3xl hover:text-gray-800 focus:outline-none">‹</button>
+                    <h2 class="text-2xl font-bold" id="breathing-title">Ejercicio de Respiración</h2>
+                </div>
+                <p class="text-gray-600 mt-1 mb-4">Sigue el círculo y el texto para calmar tu mente.</p>
+                <div class="flex-grow flex items-center justify-center">
+                    <div class="relative w-48 h-48 flex items-center justify-center">
+                        <div id="breathing-circle" class="w-16 h-16 bg-teal-400 rounded-full breathing-circle"></div>
+                        <p id="breathing-text" class="absolute font-bold text-white text-lg select-none"></p>
+                    </div>
+                </div>
+                <button id="start-breathing-btn" class="mt-4 w-full max-w-xs mx-auto bg-teal-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-600">Comenzar</button>
+            </div>
+        `;
+
+        const breathingExercises = {
+            cuadrada: { title: 'Respiración Cuadrada', timings: [ { text: 'Inhala...', duration: 4000, scale: 3 }, { text: 'Sostén...', duration: 4000, scale: 3 }, { text: 'Exhala...', duration: 4000, scale: 1 }, { text: 'Pausa...', duration: 4000, scale: 1 } ] },
+            relajante: { title: 'Respiración Relajante', timings: [ { text: 'Inhala...', duration: 4000, scale: 3 }, { text: 'Sostén...', duration: 7000, scale: 3 }, { text: 'Exhala...', duration: 8000, scale: 1 } ] },
+            enfoque: { title: 'Respiración para Enfocarse', timings: [ { text: 'Inhala...', duration: 4000, scale: 3 }, { text: 'Exhala...', duration: 6000, scale: 1 } ] }
+        };
+
+        const juegosMenuTemplate = `
+            <div class="text-center h-full flex flex-col p-4">
+                <div class="relative mb-4">
+                    <button id="back-to-tools-btn" class="absolute top-0 left-0 text-gray-500 text-3xl hover:text-gray-800 focus:outline-none">‹</button>
+                    <h2 class="text-2xl font-bold">Centro de Juegos</h2>
+                </div>
+                <p class="text-gray-600 mt-1 mb-6">Elige un juego para distraer tu mente.</p>
+                <div class="space-y-4">
+                    <button data-game="atrapa-el-punto" class="w-full text-left bg-white p-4 rounded-lg shadow-sm border hover:bg-gray-50">
+                        <h3 class="font-bold text-lg text-teal-700">Atrapa el Punto</h3>
+                        <p class="text-sm text-gray-600">Pon a prueba tus reflejos.</p>
+                    </button>
+                </div>
+            </div>`;
+
+        const atrapaElPuntoTemplate = `
+            <div class="text-center h-full flex flex-col p-4">
+                 <div class="relative mb-4">
+                    <button id="back-to-games-menu-btn" class="absolute top-0 left-0 text-gray-500 text-3xl hover:text-gray-800 focus:outline-none">‹</button>
+                    <h2 class="text-2xl font-bold">Atrapa el Punto</h2>
+                </div>
+                <div class="flex justify-between items-center my-2 px-2 text-lg">
+                    <p>Puntos: <span id="score-count" class="font-bold">0</span></p>
+                    <p>Tiempo: <span id="time-count" class="font-bold">30</span>s</p>
+                </div>
+                <div class="flex-grow flex items-center justify-center mt-2">
+                    <canvas id="gameCanvas" class="w-full h-full"></canvas>
+                </div>
+                <button id="start-game-btn" class="mt-4 w-full max-w-xs mx-auto bg-teal-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-600">Comenzar</button>
+            </div>`;
+
 
         // --- Auth Logic ---
-        toggleAuthBtn.addEventListener('click', () => {
-            loginForm.classList.toggle('hidden');
-            registerForm.classList.toggle('hidden');
-            toggleAuthBtn.textContent = loginForm.classList.contains('hidden') 
+        document.getElementById('toggle-auth-btn').addEventListener('click', () => {
+            document.getElementById('login-form').classList.toggle('hidden');
+            document.getElementById('register-form').classList.toggle('hidden');
+            document.getElementById('auth-error').textContent = '';
+            document.getElementById('toggle-auth-btn').textContent = document.getElementById('login-form').classList.contains('hidden') 
                 ? '¿Ya tienes cuenta? Inicia Sesión' 
                 : '¿No tienes cuenta? Regístrate';
         });
 
-        registerBtn.addEventListener('click', () => {
+        document.getElementById('register-btn').addEventListener('click', () => {
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
             createUserWithEmailAndPassword(auth, email, password)
-                .catch(error => { authError.textContent = error.message; });
+                .catch(error => { document.getElementById('auth-error').textContent = "Error: " + error.message; });
         });
 
-        loginBtn.addEventListener('click', () => {
+        document.getElementById('login-btn').addEventListener('click', () => {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             signInWithEmailAndPassword(auth, email, password)
-                .catch(error => { authError.textContent = error.message; });
+                .catch(error => { document.getElementById('auth-error').textContent = "Error: " + error.message; });
         });
 
-        anonymousLoginBtn.addEventListener('click', () => {
-            signInAnonymously(auth).catch(error => { authError.textContent = error.message; });
+        document.getElementById('anonymous-login-btn').addEventListener('click', () => {
+            signInAnonymously(auth).catch(error => { document.getElementById('auth-error').textContent = "Error: " + error.message; });
         });
 
-        logoutButton.addEventListener('click', () => {
+        document.getElementById('logout-button').addEventListener('click', () => {
             signOut(auth);
         });
 
@@ -208,13 +397,15 @@
             if (user) {
                 currentUser = user;
                 authSection.classList.add('hidden');
-                appContainer.classList.remove('hidden');
+                appContainer.style.display = 'flex';
                 setupFirestoreListeners();
-                // ... (Initialize app state for logged-in user)
+                showSection('inicio');
+                setDailyTip();
             } else {
                 currentUser = null;
                 authSection.classList.remove('hidden');
-                appContainer.classList.add('hidden');
+                appContainer.style.display = 'none';
+                stopBreathingExercise();
                 if (userDataUnsubscribe) userDataUnsubscribe();
                 if (postsUnsubscribe) postsUnsubscribe();
             }
@@ -222,45 +413,39 @@
 
         // --- Firestore Logic ---
         function setupFirestoreListeners() {
-            // Unsubscribe from previous listeners if they exist
             if (userDataUnsubscribe) userDataUnsubscribe();
             if (postsUnsubscribe) postsUnsubscribe();
 
-            // Listener for user-specific data
             const userDocRef = doc(db, "users", currentUser.uid);
             userDataUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
-                    // Update UI with user data
-                    // updateCounters(userData);
-                    // updateStreakView(userData);
-                    // updateAchievements(userData);
-                    // updateProgressChart(userData);
+                    updateCounters(userData);
+                    updateStreakView(userData);
                 } else {
-                    // Show onboarding if no data exists for this user
-                    // showOnboardingModal();
+                    if (!currentUser.isAnonymous) {
+                        showOnboardingModal();
+                    }
                 }
             });
 
-            // Listener for public community posts
             const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"));
             postsUnsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
                 const posts = [];
                 querySnapshot.forEach((doc) => {
                     posts.push({ id: doc.id, ...doc.data() });
                 });
-                // renderPosts(posts);
+                renderPosts(posts);
             });
         }
 
-        // Example function to save user data
         async function saveUserData(data) {
             const userDocRef = doc(db, "users", currentUser.uid);
             await setDoc(userDocRef, data, { merge: true });
         }
 
-        // Example function to add a post
         async function addPost(text) {
+            if (!text.trim()) return;
             await addDoc(collection(db, "posts"), {
                 text: text,
                 author: currentUser.isAnonymous ? "Usuario Anónimo" : currentUser.email.split('@')[0],
@@ -268,9 +453,422 @@
                 timestamp: serverTimestamp()
             });
         }
+        
+        function getTodayDateString() {
+            return new Date().toISOString().split('T')[0];
+        }
 
-        // --- Initialize App ---
-        // The onAuthStateChanged listener now handles the main app initialization flow.
+        // --- UI Rendering and Logic ---
+        function showSection(targetId) {
+            stopBreathingExercise();
+            mainContent.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            
+            let targetSection = document.getElementById(targetId);
+            
+            targetSection.classList.remove('hidden');
+            if(sectionTemplates[targetId] && targetSection.innerHTML.trim() === '') {
+                targetSection.innerHTML = sectionTemplates[targetId];
+            }
+            
+            navButtons.forEach(b => {
+                b.classList.toggle('nav-active', b.dataset.target === targetId);
+            });
+
+            bindSectionEvents(targetId);
+        }
+
+        function bindSectionEvents(sectionId) {
+            if (sectionId === 'inicio') {
+                document.getElementById('sos-button').addEventListener('click', () => {
+                    showSection('herramientas');
+                    setTimeout(() => showToolSubSection('respiraciones'), 50);
+                });
+            } else if (sectionId === 'racha') {
+                document.getElementById('streak-success-btn').addEventListener('click', handleStreakSuccess);
+                document.getElementById('streak-fail-btn').addEventListener('click', handleStreakFail);
+                getDoc(doc(db, "users", currentUser.uid)).then(docSnap => {
+                    if (docSnap.exists()) updateStreakView(docSnap.data());
+                });
+            } else if (sectionId === 'comunidad') {
+                document.getElementById('submit-post-btn').addEventListener('click', () => {
+                    const postInput = document.getElementById('post-input');
+                    addPost(postInput.value);
+                    postInput.value = '';
+                });
+                renderPosts([]); // Initially render empty, listener will populate
+            } else if (sectionId === 'conoce') {
+                document.querySelectorAll('[data-accordion="button"]').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const content = button.nextElementSibling;
+                        const icon = button.querySelector('span');
+                        content.classList.toggle('hidden');
+                        icon.classList.toggle('rotate-180');
+                    });
+                });
+            } else if (sectionId === 'avance') {
+                getDoc(doc(db, "users", currentUser.uid)).then(docSnap => {
+                    if (docSnap.exists()) {
+                        updateProgressUI(docSnap.data());
+                    }
+                });
+            } else if (sectionId === 'herramientas') {
+                const toolsMenu = document.getElementById('tools-main-menu');
+                if(toolsMenu){
+                    toolsMenu.querySelectorAll('[data-tool]').forEach(button => {
+                        if (!button.disabled) {
+                           button.addEventListener('click', () => showToolSubSection(button.dataset.tool));
+                        }
+                    });
+                }
+            }
+        }
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => showSection(button.dataset.target));
+        });
+
+        function showOnboardingModal() {
+            onboardingModal.innerHTML = onboardingTemplate;
+            onboardingModal.classList.remove('hidden');
+            const saveBtn = document.getElementById('save-settings-button');
+            saveBtn.addEventListener('click', async () => {
+                saveBtn.disabled = true;
+                saveBtn.textContent = "Guardando...";
+                try {
+                    const quitDate = document.getElementById('quit-date-modal').value;
+                    const dailyCost = document.getElementById('daily-cost-modal').value;
+                    if (!quitDate || !dailyCost || dailyCost <= 0) {
+                        alert('Por favor, completa ambos campos con valores válidos.');
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Guardar y Empezar";
+                        return;
+                    }
+                    const initialData = {
+                        quitDate,
+                        dailyCost: parseFloat(dailyCost),
+                        streak: 0,
+                        lastCheckIn: null,
+                        history: []
+                    };
+                    await saveUserData(initialData);
+                    onboardingModal.classList.add('hidden');
+                } catch (error) {
+                    console.error("Error saving data:", error);
+                    alert("Hubo un error al guardar. Intenta de nuevo.");
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = "Guardar y Empezar";
+                }
+            });
+        }
+        
+        // --- Update Functions (called by Firestore listener) ---
+        function updateCounters(userData) {
+            const { quitDate, dailyCost } = userData;
+            const diasEl = document.getElementById('dias-sin-vapear');
+            const dineroEl = document.getElementById('dinero-ahorrado');
+            if (!diasEl || !dineroEl || !quitDate || isNaN(dailyCost)) {
+                if(diasEl) diasEl.textContent = '0'; 
+                if(dineroEl) dineroEl.textContent = '$ 0'; 
+                return;
+            }
+            const diffDays = Math.max(0, Math.floor((new Date() - new Date(quitDate)) / (1000 * 60 * 60 * 24)));
+            const moneySaved = (diffDays * dailyCost).toFixed(2);
+            diasEl.textContent = diffDays;
+            dineroEl.textContent = `$ ${moneySaved}`;
+        }
+
+        function updateStreakView(userData = {}) {
+            const { streak = 0, lastCheckIn = null } = userData;
+            const streakDaysEl = document.getElementById('streak-days');
+            const streakMessageEl = document.getElementById('streak-message');
+            const streakButtonsContainer = document.getElementById('streak-buttons');
+            
+            if(!streakDaysEl) return;
+
+            const todayStr = getTodayDateString();
+            const yesterdayStr = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0];
+
+            let currentStreak = streak;
+            if (lastCheckIn && lastCheckIn < yesterdayStr) {
+                currentStreak = 0;
+            }
+            streakDaysEl.textContent = currentStreak;
+
+            if (lastCheckIn === todayStr) {
+                streakButtonsContainer.classList.add('hidden');
+                streakMessageEl.innerHTML = `<p class="text-green-600 font-bold">¡Bien hecho! Vuelve mañana para continuar tu racha.</p>`;
+            } else {
+                streakButtonsContainer.classList.remove('hidden');
+                streakMessageEl.innerHTML = `<p class="text-gray-600">Aún no has registrado tu día. ¡Tú puedes!</p>`;
+            }
+        }
+        
+        async function handleStreakSuccess() {
+            const userDocRef = doc(db, "users", currentUser.uid);
+            const docSnap = await getDoc(userDocRef);
+            if(docSnap.exists()){
+                const userData = docSnap.data();
+                const yesterdayStr = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0];
+                const newStreak = (userData.lastCheckIn === yesterdayStr) ? userData.streak + 1 : 1;
+                await updateDoc(userDocRef, {
+                    streak: newStreak,
+                    lastCheckIn: getTodayDateString()
+                });
+            }
+        }
+
+        async function handleStreakFail() {
+            const userDocRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userDocRef, {
+                streak: 0,
+                lastCheckIn: getTodayDateString()
+            });
+            const streakMessageEl = document.getElementById('streak-message');
+            if(streakMessageEl) streakMessageEl.innerHTML = `<p class="text-red-600 font-bold">Una recaída es un paso en el camino, no el final. Mañana es una nueva oportunidad. ¡No te rindas!</p>`;
+        }
+        
+        function renderPosts(posts) {
+            const postsContainer = document.getElementById('posts-container');
+            if (!postsContainer) return;
+            postsContainer.innerHTML = '';
+            posts.forEach(post => {
+                const postEl = document.createElement('div');
+                postEl.className = 'bg-gray-50 p-4 rounded-lg border';
+                const postDate = post.timestamp ? post.timestamp.toDate() : new Date();
+                postEl.innerHTML = `
+                    <p class="text-gray-800 break-words">${post.text}</p>
+                    <p class="text-xs text-gray-400 mt-2 text-right">${post.author} • ${postDate.toLocaleDateString()}</p>
+                `;
+                postsContainer.appendChild(postEl);
+            });
+        }
+        
+        function updateProgressUI(userData) {
+            const { quitDate, dailyCost, history = [] } = userData;
+            if(!quitDate || isNaN(dailyCost)) return;
+            const diffDays = Math.max(0, Math.floor((new Date() - new Date(quitDate)) / (1000 * 60 * 60 * 24)));
+            
+            const achievementsGrid = document.getElementById('achievements-grid');
+            if(achievementsGrid) {
+                achievementsGrid.innerHTML = '';
+                achievements.forEach(ach => {
+                    const isUnlocked = diffDays >= ach.days;
+                    const achievementEl = document.createElement('div');
+                    achievementEl.className = `p-3 rounded-lg shadow transition-all duration-300 ${isUnlocked ? 'bg-amber-400 text-white' : 'bg-gray-200 text-gray-400'}`;
+                    achievementEl.innerHTML = `<p class="text-2xl ${isUnlocked ? '' : 'opacity-50'}">${ach.icon}</p><p class="text-xs font-bold">${ach.label}</p>`;
+                    achievementsGrid.appendChild(achievementEl);
+                });
+            }
+
+            const chartCanvas = document.getElementById('progresoChart');
+            if(chartCanvas) {
+                let labels = [];
+                let data = [];
+                if (diffDays < 14) {
+                    for (let i = 1; i <= diffDays; i++) { labels.push(`Día ${i}`); data.push(i * dailyCost); }
+                } else {
+                    const weeks = Math.floor(diffDays / 7);
+                    for (let i = 1; i <= weeks; i++) { labels.push(`Semana ${i}`); data.push(i * 7 * dailyCost); }
+                    if (diffDays % 7 > 0) { labels.push('Ahora'); data.push(diffDays * dailyCost); }
+                }
+                if (window.progresoChartInstance) { window.progresoChartInstance.destroy(); }
+                window.progresoChartInstance = new Chart(chartCanvas.getContext('2d'), {
+                    type: 'line', data: { labels, datasets: [{
+                        label: 'Dinero Ahorrado ($)', data, borderColor: '#4FD1C5',
+                        backgroundColor: 'rgba(79, 209, 197, 0.1)', fill: true, tension: 0.1
+                    }]},
+                    options: { responsive: true, maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true } },
+                        plugins: { legend: { display: false }, tooltip: {
+                            backgroundColor: '#2D3748', titleFont: { weight: 'bold' },
+                            bodyFont: { size: 14 }, displayColors: false
+                        }}
+                    }
+                });
+            }
+        }
+
+        // --- Daily Tip ---
+        const dailyTips = [
+            "Cuando sientas ganas de vapear, bebe un vaso de agua fría.", "Identifica tus detonantes. ¿Es el estrés? ¿El aburrimiento?",
+            "Llama a un amigo o familiar. Hablar durante 5 minutos puede distraerte.", "Sal a caminar. Cambiar de ambiente y mover tu cuerpo hace maravillas.",
+            "Recuerda tu 'porqué'. Ten a la mano la razón por la que decidiste dejarlo.", "Practica la regla de los 5 minutos. Dile a tu cerebro: 'esperaré 5 minutos'.",
+            "Celebra tus pequeñas victorias. Cada hora sin vapear es un logro.", "Evita el café y el alcohol al principio, pueden intensificar los antojos.",
+            "Mantén tus manos y boca ocupadas. Mastica chicle sin azúcar o come una paleta."
+        ];
+        function setDailyTip() {
+            const tipElement = document.getElementById('tip-text');
+            if(!tipElement) return;
+            const now = new Date();
+            const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            tipElement.textContent = dailyTips[dayOfYear % dailyTips.length];
+        }
+
+        // --- Tools Sub-Sections Logic ---
+        function showToolSubSection(tool) {
+            const toolsSection = document.getElementById('herramientas');
+            if (tool === 'respiraciones') {
+                toolsSection.innerHTML = breathingMenuTemplate;
+                document.getElementById('back-to-tools-btn').addEventListener('click', () => {
+                    toolsSection.innerHTML = sectionTemplates.herramientas;
+                    bindSectionEvents('herramientas');
+                });
+                toolsSection.querySelectorAll('[data-exercise]').forEach(button => {
+                    button.addEventListener('click', () => {
+                        showBreathingAnimation(button.dataset.exercise);
+                    });
+                });
+            } else if (tool === 'juegos') {
+                toolsSection.innerHTML = juegosMenuTemplate;
+                document.getElementById('back-to-tools-btn').addEventListener('click', () => {
+                    toolsSection.innerHTML = sectionTemplates.herramientas;
+                    bindSectionEvents('herramientas');
+                });
+                toolsSection.querySelector('[data-game="atrapa-el-punto"]').addEventListener('click', () => {
+                    showGame('atrapa-el-punto');
+                });
+            }
+        }
+
+        function showBreathingAnimation(exerciseKey) {
+            const toolsSection = document.getElementById('herramientas');
+            toolsSection.innerHTML = breathingAnimationTemplate;
+            
+            const exercise = breathingExercises[exerciseKey];
+            document.getElementById('breathing-title').textContent = exercise.title;
+
+            document.getElementById('start-breathing-btn').addEventListener('click', () => startBreathingExercise(exercise));
+            document.getElementById('back-to-breathing-menu-btn').addEventListener('click', () => showToolSubSection('respiraciones'));
+        }
+
+        function startBreathingExercise(exercise) {
+            document.getElementById('start-breathing-btn').classList.add('hidden');
+            runBreathingCycle(exercise, 0);
+        }
+
+        function stopBreathingExercise() {
+            clearInterval(breathingInterval);
+            const circle = document.getElementById('breathing-circle');
+            if(circle) {
+                circle.style.transform = 'scale(1)';
+            }
+        }
+
+        function runBreathingCycle(exercise, step) {
+            const circle = document.getElementById('breathing-circle');
+            const text = document.getElementById('breathing-text');
+            if (!circle || !text) return;
+
+            const currentStep = exercise.timings[step];
+            text.textContent = currentStep.text;
+            circle.style.transform = `scale(${currentStep.scale})`;
+
+            const nextStep = (step + 1) % exercise.timings.length;
+            
+            breathingInterval = setTimeout(() => {
+                runBreathingCycle(exercise, nextStep);
+            }, currentStep.duration);
+        }
+        
+        // --- "Atrapa el Punto" Game Logic ---
+        let gameCanvas, ctx, score, timeLeft, gameTimerInterval, dot;
+        
+        function showGame(gameKey) {
+            const toolsSection = document.getElementById('herramientas');
+            if (gameKey === 'atrapa-el-punto') {
+                toolsSection.innerHTML = atrapaElPuntoTemplate;
+                document.getElementById('back-to-games-menu-btn').addEventListener('click', () => showToolSubSection('juegos'));
+                document.getElementById('start-game-btn').addEventListener('click', startCatchTheDotGame);
+            }
+        }
+
+        function startCatchTheDotGame() {
+            gameCanvas = document.getElementById('gameCanvas');
+            const scoreCount = document.getElementById('score-count');
+            const timeCount = document.getElementById('time-count');
+            const startBtn = document.getElementById('start-game-btn');
+            
+            if (!gameCanvas || !scoreCount || !timeCount || !startBtn) return;
+            
+            startBtn.classList.add('hidden');
+            ctx = gameCanvas.getContext('2d');
+            
+            const rect = gameCanvas.getBoundingClientRect();
+            gameCanvas.width = rect.width;
+            gameCanvas.height = rect.height;
+
+            score = 0;
+            timeLeft = 30;
+            scoreCount.textContent = score;
+            timeCount.textContent = timeLeft;
+            dot = { x: 0, y: 0, radius: 15 };
+
+            moveDot();
+            drawDot();
+
+            gameCanvas.addEventListener('click', handleCanvasClick);
+            
+            clearInterval(gameTimerInterval);
+            gameTimerInterval = setInterval(() => {
+                timeLeft--;
+                timeCount.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function drawDot() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+            ctx.beginPath();
+            ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#4FD1C5';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function moveDot() {
+            if (!gameCanvas) return;
+            dot.x = Math.random() * (gameCanvas.width - dot.radius * 2) + dot.radius;
+            dot.y = Math.random() * (gameCanvas.height - dot.radius * 2) + dot.radius;
+        }
+
+        function handleCanvasClick(event) {
+            if (!gameCanvas) return;
+            const rect = gameCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const distance = Math.sqrt((x - dot.x)**2 + (y - dot.y)**2);
+
+            if (distance < dot.radius) {
+                score++;
+                document.getElementById('score-count').textContent = score;
+                moveDot();
+                drawDot();
+            }
+        }
+
+        function endGame() {
+            clearInterval(gameTimerInterval);
+            if(gameCanvas) gameCanvas.removeEventListener('click', handleCanvasClick);
+            if(ctx) {
+                ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+                ctx.font = "bold 24px 'Nunito'";
+                ctx.fillStyle = '#333';
+                ctx.textAlign = "center";
+                ctx.fillText(`¡Juego Terminado!`, gameCanvas.width / 2, gameCanvas.height / 2 - 20);
+                ctx.font = "18px 'Roboto'";
+                ctx.fillText(`Puntos: ${score}`, gameCanvas.width / 2, gameCanvas.height / 2 + 20);
+            }
+            const startBtn = document.getElementById('start-game-btn');
+            if(startBtn) {
+                startBtn.textContent = 'Jugar de Nuevo';
+                startBtn.classList.remove('hidden');
+            }
+        }
+
     </script>
 </body>
 </html>
