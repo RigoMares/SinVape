@@ -31,6 +31,16 @@ meta:
 # -----------------------------------------------------------------------------
 frente_a_redes:
   routing: "corriente_3_conversacion_y_ataques_en_redes"
+
+  # --- Cómo se captura (validado 2026-06-03) ---
+  captura:
+    metodo: "SERP descubre (filtro de recencia tbs=qdr) → facebook_posts enriquece"
+    comando_diario: "python3 intel/capture.py --sweep full --frente all --recency d --enrich 20 --hours 48 --zone web_unlocker1"
+    # Sin recencia, ~89% de los posts enriquecidos caían FUERA de 48h (Google prioriza
+    # evergreen con alto engagement). Con --recency d: 100% en ventana (medido).
+    nota_recencia: "usar SIEMPRE --recency d/w en monitoreo; sin él se desperdicia enrich."
+    pendiente_opcional: "discover-by-profile (Dataset API, num_of_posts+fechas) para completitud total de páginas oficiales. `facebook_posts <perfil>` da crawl_error — no sirve para perfiles."
+
   plataformas:
     facebook:
       habilitado: true
