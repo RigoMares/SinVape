@@ -238,7 +238,7 @@ def parse_headlines(md: str, base_url: str) -> list[dict]:
     """Extrae titulares (h2/h3, con o sin link) + entradilla (parrafo siguiente)."""
     base_dom = _domain(base_url)
     lines = md.splitlines()
-    out, seen = [], set()
+    out, seen, seen_titles = [], set(), set()
     for i, line in enumerate(lines):
         s = line.strip()
         title, link = None, None
@@ -256,17 +256,28 @@ def parse_headlines(md: str, base_url: str) -> list[dict]:
             if not m:
                 continue
             title = m.group(1).strip()
-            if len(title) < MIN_PLAIN_TITLE_LEN:  # probablemente etiqueta de seccion
+            if title.startswith("!") or len(title) < MIN_PLAIN_TITLE_LEN:
                 continue
-        key = link or title.lower()
-        if key in seen:
+            # algunos sitios (El Sudcaliforniano) ponen el link en una linea ](url ...)
+            # aparte; recuperalo y resuelvelo si es relativo.
+            for nxt in lines[i + 1:i + 4]:
+                lm = re.search(r"\]\((\S+?)[\s\")]", nxt)
+                if lm:
+                    link = urllib.parse.urljoin(base_url, lm.group(1))
+                    break
+        # dedup por link Y por titulo (la misma nota sale como destacada y en lista)
+        tkey = title.lower()
+        if (link and link in seen) or tkey in seen_titles:
             continue
-        seen.add(key)
+        if link:
+            seen.add(link)
+        seen_titles.add(tkey)
         # entradilla = primer parrafo de texto plano tras el titular
+        # (salta headings, listas, imagenes y restos de markdown-link `](...)`).
         entradilla = ""
         for nxt in lines[i + 1:i + 6]:
             t = nxt.strip()
-            if t and not t.startswith(("#", "*", "[", "!", "-")):
+            if t and not t.startswith(("#", "*", "[", "]", "(", ")", "!", "-")):
                 entradilla = t
                 break
         out.append({"titulo": title, "link": link, "entradilla": entradilla})
@@ -378,7 +389,7 @@ def main() -> None:
         fa = cfg["frente_a_redes"]
         entities = (fa["bloque_adversario"]["personas"] + fa["bloque_adversario"]["marcas"]
                     + fa["bloque_aliado"]["personas"] + fa["bloque_aliado"]["marcas"]
-                    + fa["temas_calientes"])
+                    + fa["temas_calientes"] + fa.get("variantes_busqueda", []))
         media_limit = None
 
     api_key = args.api_key or os.environ.get("BRIGHTDATA_API_KEY")

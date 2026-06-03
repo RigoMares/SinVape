@@ -87,6 +87,14 @@ frente_a_redes:
     - "desabasto medicamentos BCS"
     - "BCS merece más"
 
+  # --- Variantes de búsqueda (se suman como queries SERP; el nombre exacto falla seguido) ---
+  # Medido 2026-06-03: "Francisco Pelayo" 0 hits, "PAN BCS" 1 hit -> usar variantes.
+  variantes_busqueda:
+    - "Rigoberto Mares"            # Rigo Mares
+    - "Pancho Pelayo"             # Francisco Pelayo (0 hits por nombre formal)
+    - "PAN Baja California Sur"    # PAN BCS (1 hit por sigla)
+    - "Acción Nacional Baja California Sur"
+
   # --- Etiquetas de ataque a vigilar (disparan kit de defensa) ---
   etiquetas_ataque:
     - termino: "misógino + Mares"
