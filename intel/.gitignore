@@ -1,0 +1,3 @@
+# Materia prima cruda de cada corrida (datos publicos de terceros + markdown
+# de portadas). No se versiona: es efimera y la consume el workflow de analisis.
+captures/
