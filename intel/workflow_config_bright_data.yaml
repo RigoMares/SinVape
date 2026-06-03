@@ -115,7 +115,7 @@ frente_b_medios:
       secciones: ["portada", "local"]
       bloquea_403: true
     - nombre: "Tribuna de los Cabos"
-      url: "https://tribunadeloscabos.com.mx"
+      url: "https://tribunademexico.com"   # rebrand: tribunadeloscabos.com.mx redirige aquí
       secciones: ["portada"]
       bloquea_403: true
     - nombre: "Metropolimx"

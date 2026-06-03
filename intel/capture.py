@@ -182,9 +182,15 @@ HEADLINE_PLAIN_RE = re.compile(r"^#{2,3}\s+(?!\[)(.+?)\s*$")
 MIN_PLAIN_TITLE_LEN = 25  # descarta etiquetas de seccion ("Agenda azul", "Deportes")
 
 
+def _domain(url: str) -> str:
+    """Dominio normalizado: sin esquema, sin path, sin 'www.'."""
+    d = url.split("//")[-1].split("/")[0].lower()
+    return d[4:] if d.startswith("www.") else d
+
+
 def parse_headlines(md: str, base_url: str) -> list[dict]:
     """Extrae titulares (h2/h3, con o sin link) + entradilla (parrafo siguiente)."""
-    host = base_url.split("//")[-1].strip("/")
+    base_dom = _domain(base_url)
     lines = md.splitlines()
     out, seen = [], set()
     for i, line in enumerate(lines):
@@ -193,7 +199,11 @@ def parse_headlines(md: str, base_url: str) -> list[dict]:
         m = HEADLINE_LINKED_RE.match(s)
         if m:
             title, link = m.group(1).strip(), m.group(2).strip()
-            if host not in link:  # ignora links externos (redes, otros dominios)
+            if title.startswith("!"):  # heading que es solo logo/imagen
+                continue
+            # mismo dominio registrable (tolera www / subdominios); filtra externos
+            link_dom = _domain(link)
+            if base_dom not in link_dom and link_dom not in base_dom:
                 continue
         else:
             m = HEADLINE_PLAIN_RE.match(s)
@@ -214,6 +224,34 @@ def parse_headlines(md: str, base_url: str) -> list[dict]:
                 entradilla = t
                 break
         out.append({"titulo": title, "link": link, "entradilla": entradilla})
+    return out
+
+
+# Fallback: enlaces de nota (texto largo, slug con guiones) para sitios cuyos
+# titulares NO viven en headings (p.ej. Peninsular Digital, listas de enlaces).
+# (?<!!) evita capturar imagenes ![alt](img).
+ARTICLE_LINK_RE = re.compile(r"(?<!!)\[([^\]]{30,}?)\]\((https?://[^)]+)\)")
+NAV_HINTS = ("contacto", "privacy", "aviso", "anunciate", "codigo-etico", "/tag/",
+             "/category", "/categorias", "/author", "suscrib", "unete", "/page/", "wp-content")
+
+
+def harvest_article_links(md: str, base_dom: str) -> list[dict]:
+    """Cosecha enlaces que parezcan notas (mismo dominio, slug con guiones)."""
+    out, seen = [], set()
+    for m in ARTICLE_LINK_RE.finditer(md):
+        text, link = m.group(1).strip(), m.group(2).strip()
+        ld = _domain(link)
+        if base_dom not in ld and ld not in base_dom:
+            continue
+        last = link.split("//")[-1].rstrip("/").split("/")[-1]
+        if "-" not in last:                       # los slugs de nota llevan guiones
+            continue
+        if any(h in link.lower() for h in NAV_HINTS) or text.startswith("!"):
+            continue
+        if link in seen:
+            continue
+        seen.add(link)
+        out.append({"titulo": text, "link": link, "entradilla": ""})
     return out
 
 
@@ -245,6 +283,13 @@ def frente_b(cfg: dict, zone: str, api_key: str | None, media_limit: int | None)
             resultados.append({"medio": m["nombre"], "url": m["url"], "ok": False, "titulares": []})
             continue
         titulares = parse_headlines(md, m["url"])
+        # Fallback para sitios cuyos titulares no estan en headings.
+        if len(titulares) < 5:
+            existentes = {t["link"] for t in titulares if t["link"]}
+            for h in harvest_article_links(md, _domain(m["url"])):
+                if h["link"] not in existentes:
+                    titulares.append(h)
+                    existentes.add(h["link"])
         print(f"  - {m['nombre']}: OK, {len(titulares)} titulares")
         resultados.append({
             "medio": m["nombre"], "url": m["url"], "ok": True,
