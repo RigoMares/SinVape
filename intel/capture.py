@@ -37,9 +37,14 @@ import os
 import re
 import subprocess
 import sys
+import time
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 import yaml
+
+BRIGHTDATA_API = "https://api.brightdata.com"
 
 REPO = Path(__file__).resolve().parent.parent
 CONFIG_PATH = REPO / "intel" / "workflow_config_bright_data.yaml"
@@ -71,23 +76,61 @@ def run_cli(args: list[str], api_key: str | None, timeout: int = 120) -> tuple[i
 # --------------------------------------------------------------------------- #
 # FRENTE A — Redes (SERP descubre -> pipeline enriquece)
 # --------------------------------------------------------------------------- #
-def serp_discover(entity: str, zone: str, api_key: str | None) -> list[dict]:
-    """Descubre posts publicos de FB que mencionan `entity` via SERP API."""
+def serp_request_api(query: str, zone: str, api_key: str, recency: str,
+                     retries: int = 3) -> dict | None:
+    """SERP via API directa /request, con tbs=qdr para filtrar por recencia.
+
+    La CLI `search` no expone el filtro temporal; por eso vamos directo al API.
+    recency: 'd' (24h) | 'w' (semana) | 'm' (mes).
+    """
+    params = {"q": query, "brd_json": "1", "gl": "mx", "hl": "es",
+              "tbs": f"qdr:{recency}"}
+    google_url = "https://www.google.com/search?" + urllib.parse.urlencode(params)
+    body = json.dumps({"zone": zone, "url": google_url, "format": "raw"}).encode()
+    for attempt in range(1, retries + 1):
+        req = urllib.request.Request(
+            f"{BRIGHTDATA_API}/request", data=body, method="POST",
+            headers={"Authorization": f"Bearer {api_key}",
+                     "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return json.loads(resp.read().decode())
+        except Exception as e:  # 503 DNS del nodo de salida suele ser transitorio
+            if attempt < retries:
+                time.sleep(2 * attempt)
+                continue
+            print(f"  ! SERP-API fallo tras {retries} intentos: {e}", file=sys.stderr)
+            return None
+    return None
+
+
+def serp_discover(entity: str, zone: str, api_key: str | None,
+                  recency: str = "none") -> list[dict]:
+    """Descubre posts publicos de FB que mencionan `entity` via SERP API.
+
+    Si recency != 'none', usa la API directa con filtro temporal (tbs=qdr).
+    """
     query = f'"{entity}" site:facebook.com'
-    rc, out, err = run_cli(
-        ["search", query, "--zone", zone, "--country", "mx",
-         "--language", "es", "--json"],
-        api_key, timeout=90,
-    )
-    if rc != 0:
-        print(f"  ! SERP fallo para '{entity}': {err.strip().splitlines()[-1] if err.strip() else rc}",
-              file=sys.stderr)
-        return []
-    try:
-        data = json.loads(out)
-    except json.JSONDecodeError:
-        print(f"  ! SERP devolvio JSON invalido para '{entity}'", file=sys.stderr)
-        return []
+    data: dict | None = None
+    if recency != "none" and api_key:
+        data = serp_request_api(query, zone, api_key, recency)
+        if data is None:
+            return []
+    else:
+        rc, out, err = run_cli(
+            ["search", query, "--zone", zone, "--country", "mx",
+             "--language", "es", "--json"],
+            api_key, timeout=90,
+        )
+        if rc != 0:
+            print(f"  ! SERP fallo para '{entity}': {err.strip().splitlines()[-1] if err.strip() else rc}",
+                  file=sys.stderr)
+            return []
+        try:
+            data = json.loads(out)
+        except json.JSONDecodeError:
+            print(f"  ! SERP devolvio JSON invalido para '{entity}'", file=sys.stderr)
+            return []
     hits = []
     for r in data.get("organic", []):
         link = r.get("link")
@@ -120,12 +163,14 @@ def enrich_post(url: str, api_key: str | None, timeout: int) -> dict | None:
 
 
 def frente_a(cfg: dict, entities: list[str], zone: str, api_key: str | None,
-             max_records: int, hard_cap: int, enrich: int, hours: int) -> dict:
-    print(f"== FRENTE A (redes) :: {len(entities)} entidades -> SERP descubre ==")
+             max_records: int, hard_cap: int, enrich: int, hours: int,
+             recency: str = "none") -> dict:
+    tag = f" (recencia qdr:{recency})" if recency != "none" else ""
+    print(f"== FRENTE A (redes) :: {len(entities)} entidades -> SERP descubre{tag} ==")
     discovered: list[dict] = []
     seen: set[str] = set()
     for ent in entities:
-        hits = serp_discover(ent, zone, api_key)
+        hits = serp_discover(ent, zone, api_key, recency)
         for h in hits:
             if h["link"] in seen:
                 continue
@@ -162,6 +207,7 @@ def frente_a(cfg: dict, entities: list[str], zone: str, api_key: str | None,
     return {
         "routing": cfg["frente_a_redes"]["routing"],
         "method": "serp_discover + facebook_posts_enrich",
+        "recency": recency,
         "entities": entities,
         "discovered_count": len(discovered),
         "discovered": discovered,
@@ -312,6 +358,8 @@ def main() -> None:
     ap.add_argument("--sweep", choices=["test", "full"], default="test")
     ap.add_argument("--zone", default=os.environ.get("BRIGHTDATA_UNLOCKER_ZONE", "web_unlocker1"))
     ap.add_argument("--api-key", default=None, help="Override; por defecto usa BRIGHTDATA_API_KEY.")
+    ap.add_argument("--recency", choices=["d", "w", "m", "none"], default="none",
+                    help="Filtro temporal SERP (d=24h, w=semana, m=mes). Solo descubre menciones recientes.")
     ap.add_argument("--enrich", type=int, default=0, help="Cuantos posts FB enriquecer (Frente A).")
     ap.add_argument("--max-records", type=int, default=None, help="Tope blando por corrida.")
     ap.add_argument("--hours", type=int, default=48, help="Ventana temporal (registros enriquecidos).")
@@ -349,7 +397,8 @@ def main() -> None:
     }
 
     if args.frente in ("a", "all"):
-        res_a = frente_a(cfg, entities, args.zone, api_key, max_records, hard_cap, args.enrich, args.hours)
+        res_a = frente_a(cfg, entities, args.zone, api_key, max_records, hard_cap,
+                         args.enrich, args.hours, args.recency)
         (out_dir / "frente_a_redes.json").write_text(
             json.dumps(res_a, ensure_ascii=False, indent=2), encoding="utf-8")
         manifest["frente_a"] = {"discovered": res_a["discovered_count"], "enriched": res_a["enriched_count"]}
