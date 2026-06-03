@@ -1,0 +1,150 @@
+# =============================================================================
+# CONFIG DEL WORKFLOW DE INTELIGENCIA — CDE PAN BCS
+# Captura vía Bright Data (Frente A: redes · Frente B: medios locales)
+# Alimenta el workflow fan-out-and-synthesize que ya corre en Claude Code.
+#
+# Decisiones cableadas (sesión 2026-06-03):
+#   - Conexión Bright Data: como servidor MCP (a conectar en config del entorno)
+#   - Alcance inicial Fase 0/1: SOLO Facebook + medios (X/Twitter = fase posterior)
+# =============================================================================
+
+meta:
+  ciclo_base: "2026-06-03"
+  estado: "scaffolding — pendiente conectar Bright Data MCP antes de Fase 0"
+  # Cuidar el gasto de TOKENS del workflow (el ciclo previo se fue a ~250k vs tope 60k).
+  # El costo en dólares de Bright Data es trivial (~$5–14/mes); el límite real son los tokens.
+  presupuesto:
+    tope_tokens_por_ciclo: 60000
+    tope_registros_por_corrida: 2000      # cap duro de captura, aunque el costo sea bajo
+    codigo_descuento_bright_data: "APIS25" # 25% off primeros 6 meses (confirmar vigencia)
+
+# -----------------------------------------------------------------------------
+# FRENTE A — REDES (producto: Social Media Scraper API)
+# Fase 0/1: SOLO Facebook habilitado. X/Twitter queda preparado pero apagado.
+# -----------------------------------------------------------------------------
+frente_a_redes:
+  routing: "corriente_3_conversacion_y_ataques_en_redes"
+  plataformas:
+    facebook:
+      habilitado: true
+      frecuencia: "diaria"
+    twitter_x:
+      habilitado: false                    # activar en fase posterior; más frágil y caro
+      frecuencia: "diaria"
+      nota: "Evaluar costo/registro y estabilidad antes de encender."
+
+  # --- BLOQUE ADVERSARIO: buscar ataques, contradicciones, munición ---
+  bloque_adversario:
+    proposito: "munición / contradicciones / vigilancia"
+    personas:
+      - "Milena Quiroga"
+      - "Christian Agúndez"
+      - "Víctor Castro"          # gobernador
+      - "Rubén Muñoz"
+      - "Manuel Cota"
+    marcas:
+      - "Morena BCS"
+
+  # --- BLOQUE ALIADO / PROPIO: defender, exponer, coordinar (NUNCA atacar) ---
+  bloque_aliado:
+    proposito: "proteger y medir — el workflow NUNCA busca munición contra este bloque"
+    lentes:
+      defensa: "¿los están atacando? si sí → sube a 🔴 para responder"
+      exposicion: "volumen y tono de sus menciones públicas"
+      coordinacion: "temas que tocan, para alinear mensaje de equipo"
+    personas:
+      - "Rigo Mares"             # / Rigoberto Mares
+      - "Francisco Pelayo"       # 'Pancho' Pelayo
+      - "Lupita Saldaña"
+      - "Edith Aguilar"
+      - "Susana Zatarain"
+    marcas:
+      - "PAN BCS"
+      - "Acción Nacional BCS"
+
+  # --- Temas calientes (del brief) ---
+  temas_calientes:
+    - "tandeo"
+    - "sin agua La Paz"
+    - "OOMSAPAS"
+    - "desabasto medicamentos BCS"
+    - "BCS merece más"
+
+  # --- Etiquetas de ataque a vigilar (disparan kit de defensa) ---
+  etiquetas_ataque:
+    - termino: "misógino + Mares"
+      accion: "activa kit de defensa del hallazgo R-1 (sentencia revocatoria Sala Regional GDL + caso Polanco)"
+
+  # --- Engagement propio (tarea A-3, semanal) ---
+  engagement_propio:
+    frecuencia: "semanal"
+    objetivos:
+      - "FB: RigoMaresA"
+      - "FB: PAN BCS"
+      - "X: cuenta de Rigo (si aplica)"
+
+# -----------------------------------------------------------------------------
+# FRENTE B — MEDIOS LOCALES (producto: Web Unlocker / Web Scraper)
+# Status de bloqueo MEDIDO empíricamente el 2026-06-03 desde el entorno.
+# 'bloquea_403: true' = confirmado que necesita Web Unlocker.
+# -----------------------------------------------------------------------------
+frente_b_medios:
+  routing:
+    - "corriente_1_gobierno_en_turno"
+    - "fuente_transversal_prensa"
+  frecuencia: "diaria"
+  regla_citas: "citar textual SOLO desde el texto real de la nota (nunca desde resumen reconstruido)"
+  medios:
+    - nombre: "El Sudcaliforniano"
+      url: "https://www.elsudcaliforniano.com.mx"
+      secciones: ["portada", "La Paz", "política"]
+      bloquea_403: true
+    - nombre: "BCS Noticias"
+      url: "https://www.bcsnoticias.mx"
+      secciones: ["portada", "política"]
+      bloquea_403: true
+    - nombre: "Diario El Independiente"
+      url: "https://www.diarioelindependiente.mx"
+      secciones: ["portada", "local"]
+      bloquea_403: true
+    - nombre: "Tribuna de los Cabos"
+      url: "https://tribunadeloscabos.com.mx"
+      secciones: ["portada"]
+      bloquea_403: true
+    - nombre: "Metropolimx"
+      url: "https://www.metropolimx.com"
+      secciones: ["BCS"]
+      bloquea_403: true
+    - nombre: "Peninsular Digital"
+      url: "https://peninsulardigital.com"
+      secciones: ["portada"]
+      bloquea_403: true
+    - nombre: "HOY BCS"
+      url: "https://hoybcs.com"
+      secciones: ["portada"]
+      bloquea_403: true
+    - nombre: "PalabraBCS"
+      url: "https://www.palabrabcs.com"
+      secciones: ["portada", "municipios"]
+      bloquea_403: true
+    # --- PENDIENTES: dominio no resuelve, confirmar URL correcta antes de incluir ---
+    - nombre: "Colectivo Pericú"
+      url: "https://colectivopericu.net"
+      secciones: ["portada"]
+      bloquea_403: null
+      pendiente: "dominio no resuelve (000) — confirmar URL real"
+    - nombre: "CPS Noticias"
+      url: "https://cpsnoticias.mx"
+      secciones: ["portada"]
+      bloquea_403: null
+      pendiente: "dominio no resuelve (000) — confirmar URL real"
+
+# -----------------------------------------------------------------------------
+# REGLAS DE OPERACIÓN
+# -----------------------------------------------------------------------------
+reglas:
+  - "Solo contenido público. Nada detrás de login privado."
+  - "Respetar tope_registros_por_corrida aunque el costo sea bajo."
+  - "Bright Data solo trae materia prima; el análisis lo hace el workflow."
+  - "No publicar nada sin pasar el filtro de verificación (redes traen cuentas falsas; portadas traen ruido)."
+  - "Bloque aliado: solo defender y medir, jamás generar ataques."
