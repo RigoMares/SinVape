@@ -4,19 +4,26 @@
 # Alimenta el workflow fan-out-and-synthesize que ya corre en Claude Code.
 #
 # Decisiones cableadas (sesión 2026-06-03):
-#   - Conexión Bright Data: como servidor MCP (a conectar en config del entorno)
+#   - Conexión Bright Data: CLI `brightdata` por Bash (zona Web Unlocker `web_unlocker1`)
 #   - Alcance inicial Fase 0/1: SOLO Facebook + medios (X/Twitter = fase posterior)
 # =============================================================================
 
 meta:
   ciclo_base: "2026-06-03"
-  estado: "scaffolding — pendiente conectar Bright Data MCP antes de Fase 0"
-  # Cuidar el gasto de TOKENS del workflow (el ciclo previo se fue a ~250k vs tope 60k).
-  # El costo en dólares de Bright Data es trivial (~$5–14/mes); el límite real son los tokens.
+  estado: "Fase 0 validada + Fase 1 (barrido de prueba) corriendo vía CLI brightdata"
+  # El costo en DÓLARES es trivial: Bright Data ~centavos/corrida y el análisis corre bajo
+  # suscripción Claude Max (no API medida por token). La restricción real NO es dinero ni un
+  # conteo crudo de tokens, sino el CUPO de uso de Max por ventana (semanal) — que Opus agota
+  # mucho más rápido que Sonnet. Se gestiona con routing de modelo por etapa (ver abajo).
   presupuesto:
+    # tope_tokens_por_ciclo: referencia de CALIDAD/contexto (que la síntesis no se diluya),
+    # ya NO un límite de costo en dólares.
     tope_tokens_por_ciclo: 60000
     tope_registros_por_corrida: 2000      # cap duro de captura, aunque el costo sea bajo
     codigo_descuento_bright_data: "APIS25" # 25% off primeros 6 meses (confirmar vigencia)
+    routing_modelo:                        # estira el cupo Max; reserva Opus donde importa
+      fan_out_subagentes: "sonnet"         # triage/extracción por corriente (barato en cupo)
+      sintesis_y_verificacion_roja: "opus" # juicio final + verificación de hallazgos 🔴
 
 # -----------------------------------------------------------------------------
 # FRENTE A — REDES (producto: Social Media Scraper API)
